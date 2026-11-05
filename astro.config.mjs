@@ -142,11 +142,27 @@ export default defineConfig({
               const tables = document.querySelectorAll('.sl-markdown-content table');
               if (!tables || tables.length === 0) return;
               tables.forEach((table) => {
+                if (table.closest('.table-window')) return;
+
+                const win = document.createElement('div');
+                win.className = 'table-window';
+
+                const header = document.createElement('div');
+                header.className = 'table-window-header';
+                header.innerHTML = '<div class="table-window-dots"><span class="table-dot red"></span><span class="table-dot yellow"></span><span class="table-dot green"></span></div>';
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'table-wrapper';
+
                 const parent = table.parentElement;
-                if (parent && !parent.classList.contains('table-wrapper')) {
-                  const wrapper = document.createElement('div');
-                  wrapper.className = 'table-wrapper';
-                  parent.insertBefore(wrapper, table);
+                if (parent && parent.classList.contains('table-wrapper')) {
+                  parent.parentNode.insertBefore(win, parent);
+                  win.appendChild(header);
+                  win.appendChild(parent);
+                } else {
+                  table.parentNode.insertBefore(win, table);
+                  win.appendChild(header);
+                  win.appendChild(wrapper);
                   wrapper.appendChild(table);
                 }
               });
