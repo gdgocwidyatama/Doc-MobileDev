@@ -128,14 +128,22 @@
   min-width: 500px !important;
 }
 
+/* Roadmap & Clean tables: Hide header row so window directly displays content */
+.roadmap-table thead,
+.roadmap-table table thead,
+.table-window.no-header thead {
+  display: none !important;
+}
+
 .sl-markdown-content th {
-  background-color: var(--m3-surface-container-high) !important;
-  color: var(--m3-on-surface) !important;
+  background-color: transparent !important;
+  color: var(--m3-on-surface-variant) !important;
   font-family: 'Geist', sans-serif !important;
-  font-weight: 700 !important;
-  font-size: 0.8rem !important;
-  letter-spacing: 0.03em !important;
-  padding: 0.85rem 1.25rem !important;
+  font-weight: 600 !important;
+  font-size: 0.76rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  padding: 0.75rem 1.25rem !important;
   border-bottom: 1px solid var(--m3-outline-variant) !important;
   border-top: none !important;
   border-left: none !important;
