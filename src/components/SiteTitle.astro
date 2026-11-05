@@ -1,0 +1,96 @@
+---
+const { siteTitleHref } = Astro.locals.starlightRoute;
+const gdgLogoDataUri = 'data:image/webp;base64,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';
+---
+
+<a href={siteTitleHref} class="site-title site-title-brand">
+  <img
+    class="brand-logo"
+    alt="GDG Logo"
+    src={gdgLogoDataUri}
+    width="38"
+    height="22"
+    loading="eager"
+    decoding="sync"
+  />
+  <div class="brand-typography-wrapper">
+    <span class="brand-title">Study Jam Mobile Dev</span>
+    <span class="brand-subtitle">GDGoC Universitas Widyatama</span>
+  </div>
+</a>
+
+<style>
+  /* Root Brand Link */
+  .site-title-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    user-select: none;
+    line-height: 1;
+  }
+
+  /* GDG Logo Icon */
+  .brand-logo {
+    height: 28px;
+    width: auto;
+    object-fit: contain;
+    flex-shrink: 0;
+    display: block;
+  }
+
+  /* 1. Kontainer Teks (Typography Wrapper) */
+  .brand-typography-wrapper {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    align-items: flex-start;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+    gap: 2px;
+  }
+
+  /* 2. Judul Utama (Title - Baris Atas) */
+  .brand-title {
+    margin: 0;
+    padding: 0;
+    font-family: 'Geist', 'Google Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--m3-on-surface, #1f1f1f);
+    white-space: nowrap;
+    transition: color 0.15s ease;
+  }
+
+  .site-title-brand:hover .brand-title {
+    color: var(--m3-primary, #0F9D58);
+  }
+
+  /* 3. Subjudul (Subtitle - Baris Bawah) */
+  .brand-subtitle {
+    margin: 0;
+    padding: 0;
+    font-family: 'Geist', 'Google Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    color: var(--m3-on-surface-variant, #42474e);
+    white-space: nowrap;
+  }
+
+  @media (max-width: 480px) {
+    .brand-logo {
+      height: 24px;
+    }
+    .brand-title {
+      font-size: 0.92rem;
+    }
+    .brand-subtitle {
+      font-size: 0.68rem;
+    }
+  }
+</style>

@@ -1,0 +1,141 @@
+:root {
+  --sl-font: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  --sl-font-mono: 'Geist', 'JetBrains Mono', monospace !important;
+
+  /* Starlight Layout Widths - Wide Screen Optimization */
+  --sl-content-width: 82rem;
+  --sl-sidebar-width: 19rem;
+
+  /* M3 Dark Theme Palette - Google / Android Tech Slate */
+  --m3-surface: #101318;
+  --m3-surface-dim: #0b0d12;
+  --m3-surface-bright: #2d3036;
+  --m3-surface-container-lowest: #080a0e;
+  --m3-surface-container-low: #181c22;
+  --m3-surface-container: #1c2026;
+  --m3-surface-container-high: #262a31;
+  --m3-surface-container-highest: #31353c;
+
+  /* Google Blue Tech Accent */
+  --m3-primary: #a8c7fa;
+  --m3-on-primary: #062e6f;
+  --m3-primary-container: #0842a0;
+  --m3-on-primary-container: #d3e3fd;
+
+  /* Android Emerald Green Secondary */
+  --m3-secondary: #7cd992;
+  --m3-on-secondary: #003915;
+  --m3-secondary-container: #0f5223;
+  --m3-on-secondary-container: #9bf3ab;
+
+  /* Amber Tertiary */
+  --m3-tertiary: #ffb951;
+  --m3-on-tertiary: #452b00;
+  --m3-tertiary-container: #633f00;
+  --m3-on-tertiary-container: #ffddb6;
+
+  --m3-error: #ffb4ab;
+  --m3-on-error: #690005;
+  --m3-error-container: #93000a;
+  --m3-on-error-container: #ffdad6;
+
+  --m3-outline: #8c9199;
+  --m3-outline-variant: #2d3138;
+
+  --m3-on-surface: #e2e2e8;
+  --m3-on-surface-variant: #c3c7cf;
+
+  /* Starlight Variable Overrides */
+  --sl-color-bg: var(--m3-surface);
+  --sl-color-bg-nav: var(--m3-surface-container-low);
+  --sl-color-bg-sidebar: var(--m3-surface-container-low);
+  --sl-color-bg-inline-code: var(--m3-surface-container-high);
+  
+  --sl-color-accent-low: var(--m3-primary-container);
+  --sl-color-accent: var(--m3-primary);
+  --sl-color-accent-high: var(--m3-on-primary-container);
+
+  --sl-color-text: var(--m3-on-surface) !important;
+  --sl-color-text-accent: var(--m3-primary) !important;
+  --sl-color-white: #ffffff;
+  --sl-color-gray-1: var(--m3-on-surface);
+  --sl-color-gray-2: var(--m3-on-surface-variant);
+  --sl-color-gray-3: #9da2ab;
+  --sl-color-gray-4: #5a5f69;
+  --sl-color-gray-5: var(--m3-outline-variant);
+  --sl-color-gray-6: var(--m3-surface-container);
+  --sl-color-black: var(--m3-surface-container-lowest);
+
+  /* M3 Shape System */
+  --m3-shape-small: 8px;
+  --m3-shape-medium: 14px;
+  --m3-shape-large: 20px;
+  --m3-shape-extra-large: 28px;
+  --m3-shape-pill: 9999px;
+
+  /* M3 Motion */
+  --m3-motion-spring: all 0.35s cubic-bezier(0.2, 0.0, 0, 1.0);
+}
+
+:root[data-theme='light'],
+[data-theme='light'] {
+  /* M3 Light Theme Palette - Google Clean Off-White */
+  --m3-surface: #f8f9fa;
+  --m3-surface-dim: #dadee3;
+  --m3-surface-bright: #ffffff;
+  --m3-surface-container-lowest: #ffffff;
+  --m3-surface-container-low: #f1f3f5;
+  --m3-surface-container: #e9ecef;
+  --m3-surface-container-high: #e2e5e9;
+  --m3-surface-container-highest: #dcdee3;
+
+  /* Google Blue Tech Accent */
+  --m3-primary: #0b57d0;
+  --m3-on-primary: #ffffff;
+  --m3-primary-container: #d3e3fd;
+  --m3-on-primary-container: #041e49;
+
+  /* Android Emerald Green Secondary */
+  --m3-secondary: #137333;
+  --m3-on-secondary: #ffffff;
+  --m3-secondary-container: #c4eed0;
+  --m3-on-secondary-container: #072711;
+
+  /* Amber Tertiary */
+  --m3-tertiary: #7a5800;
+  --m3-on-tertiary: #ffffff;
+  --m3-tertiary-container: #ffddb6;
+  --m3-on-tertiary-container: #261900;
+
+  --m3-error: #ba1a1a;
+  --m3-on-error: #ffffff;
+  --m3-error-container: #ffdad6;
+  --m3-on-error-container: #410002;
+
+  --m3-outline: #72777f;
+  --m3-outline-variant: #d8dce2;
+
+  --m3-on-surface: #191c20;
+  --m3-on-surface-variant: #42474e;
+
+  /* Starlight Variable Overrides (Light Mode - Inverted Contrast) */
+  --sl-color-bg: var(--m3-surface);
+  --sl-color-bg-nav: var(--m3-surface-container-low);
+  --sl-color-bg-sidebar: var(--m3-surface-container-low);
+  --sl-color-bg-inline-code: var(--m3-surface-container-high);
+
+  --sl-color-accent-low: var(--m3-primary-container);
+  --sl-color-accent: var(--m3-primary);
+  --sl-color-accent-high: var(--m3-on-primary-container);
+
+  --sl-color-text: var(--m3-on-surface) !important;
+  --sl-color-text-accent: var(--m3-primary) !important;
+  --sl-color-white: #191c20 !important;
+  --sl-color-gray-1: #191c20 !important;
+  --sl-color-gray-2: #3c4043 !important;
+  --sl-color-gray-3: #5f6368 !important;
+  --sl-color-gray-4: #80868b !important;
+  --sl-color-gray-5: var(--m3-outline-variant) !important;
+  --sl-color-gray-6: var(--m3-surface-container) !important;
+  --sl-color-black: #ffffff !important;
+}

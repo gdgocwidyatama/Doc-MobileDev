@@ -1,0 +1,62 @@
+---
+title: "Study Jam Mobile Development"
+description: "Dokumentasi dan panduan praktikum hands-on Android Jetpack Compose untuk peserta GDGoC Universitas Widyatama."
+template: splash
+prev: false
+next: false
+hero:
+  image:
+    file: ../../assets/gdg-logo.png
+    alt: "GDG Logo"
+  actions:
+    - text: "Get Started"
+      link: /sesi-1/
+      icon: right-arrow
+      variant: primary
+    - text: "Starter Template"
+      link: https://github.com/gdgocwidyatama/MobileDev
+      icon: github
+      variant: secondary
+    - text: "Submission Capstone"
+      link: https://github.com/gdgocwidyatama/Substitution-MobileDev
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+import AboutCredits from '../../components/AboutCredits.astro';
+
+## Pilar Praktikum: Make Apps From Scratch
+
+<CardGrid>
+  <Card title="True Blank Canvas" icon="pencil">
+    Mulai dari Scaffold kosong memplong bersama instruktur. Kamu merakit sendiri antarmuka baris demi baris tanpa magic code yang bikin bingung.
+  </Card>
+  <Card title="Incremental Dependencies" icon="seti:gradle">
+    Dependensi dipasang bertahap tepat saat sesi membutuhkannya: Splash API di Sesi 1, DataStore Preferences di Sesi 3, OkHttp & Coil di Sesi 5.
+  </Card>
+  <Card title="Physical Device First" icon="laptop">
+    Deploy langsung ke HP fisik via kabel data USB atau Wireless Debugging sejak sesi pertama dengan dukungan `enableEdgeToEdge()`.
+  </Card>
+  <Card title="Material 3 & Monet" icon="sun">
+    Memahami sistem semantic token Material 3, dynamic color sistem Android, dan cara memecah komponen reusable yang rapi.
+  </Card>
+  <Card title="Modern Architecture" icon="seti:kotlin">
+    Membangun alur UI deklaratif berbasis state menggunakan `remember`, `mutableStateOf`, Coroutines, dan Repository Pattern.
+  </Card>
+  <Card title="Portfolio Capstone Project" icon="rocket">
+    Aplikasi LuminaWalls dikompilasi ke APK rilis teroptimasi dengan R8/ProGuard dan dikumpulkan sebagai portofolio nyata hasil belajar.
+  </Card>
+</CardGrid>
+
+## Roadmap 5 Pertemuan Study Jam
+
+| Sesi | Topik Materi | Target Hands-on & Checkpoint |
+|---|---|---|
+| [**Sesi 1**](/sesi-1/) | Environment Setup, First App Launch & Git on GitHub | Colok HP fisik, run app Compose perdana (`enableEdgeToEdge`), pasang Splash API (`core-splashscreen`), dan push ke repo fork masing-masing. |
+| [**Sesi 2**](/sesi-2/) | App Gateway & Setup Wizard - Thinking in Compose Basics | Kanvas kosong (*true blank canvas*), Setup Wizard 3 langkah, gerbang state `isSetupCompleted`, dan Stacking Card perdana (`Box` + Scrim Gradient). |
+| [**Sesi 3**](/sesi-3/) | Stacking Cards, Settings Theme Switcher & Floating Nav Bar | Katalog galeri 2 kolom `LazyVerticalGrid`, simpan preferensi ke DataStore, Theme Switcher 3 mode (Dark/Light/System), dan `FloatingNavBar`. |
+| [**Sesi 4**](/sesi-4/) | Material 3 Design - Tokens, Component Reuse & Contributors Screen | M3 semantic color tokens, badge label reusable `WallpaperTag`, tombol Back adaptif, dan halaman `ContributorsScreen` via GitHub API. |
+| [**Sesi 5**](/sesi-5/) | Capstone Showcase - Remote API, Coil, Native WallpaperManager, R8 & Submission | LuminaWalls Full App: integrasi remote API Cloudflare Worker, asinkron image loading Coil, pasang wallpaper native ke HP fisik, build APK R8, dan pengumpulan Capstone. |
+
+<AboutCredits />

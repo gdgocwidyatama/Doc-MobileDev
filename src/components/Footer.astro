@@ -1,0 +1,144 @@
+---
+// Footer.astro - Custom Footer for Study Jam Mobile Dev
+import EditLink from 'virtual:starlight/components/EditLink';
+import LastUpdated from 'virtual:starlight/components/LastUpdated';
+import Pagination from 'virtual:starlight/components/Pagination';
+
+// Copyright hanya ditampilkan di homepage/beranda, tidak di halaman dokumentasi
+const isHomepage = Astro.props.entry?.data?.template === 'splash' || Astro.url.pathname.replace(/\/$/, '') === '';
+---
+
+<footer class="studyjam-footer not-content">
+  <div class="meta sl-flex">
+    <EditLink />
+    <LastUpdated />
+  </div>
+  <Pagination />
+
+  {isHomepage && (
+    <div class="footer-card">
+      <div class="footer-left">
+        <span>&copy; {new Date().getFullYear()} <strong>GDGoC Widyatama</strong>. All rights reserved.</span>
+      </div>
+      <div class="footer-right">
+        <a
+          href="https://docs.astro.build"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="astro-badge"
+          title="Dokumentasi Resmi Astro"
+          aria-label="Dokumentasi Resmi Astro"
+        >
+          <svg class="astro-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M7.233 15.856c-.456 1.5-.132 3.586.948 4.57v-.036l.036-.096c.132-.636.648-1.032 1.309-1.008.612.012.96.336 1.044 1.044.036.264.036.528.048.803v.084c0 .6.168 1.176.504 1.68.3.48.72.851 1.284 1.103l-.024-.048-.024-.096c-.42-1.26-.12-2.135.984-2.879l.336-.227.745-.492a3.647 3.647 0 0 0 1.536-2.603c.06-.456 0-.9-.132-1.331l-.18.12c-1.668.887-3.577 1.2-5.425.84-1.117-.169-2.197-.48-3-1.416l.011-.012ZM2 15.592s3.205-1.559 6.421-1.559l2.437-7.508c.084-.36.348-.6.648-.6.3 0 .552.24.648.612l2.425 7.496c3.816 0 6.421 1.56 6.421 1.56L15.539.72c-.144-.444-.42-.72-.768-.72H8.24c-.348 0-.6.276-.768.72L2 15.592Z"/>
+          </svg>
+          <span>Built with Astro</span>
+        </a>
+      </div>
+    </div>
+  )}
+</footer>
+
+<style>
+  .studyjam-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-top: 2rem;
+  }
+
+  .meta {
+    gap: 0.75rem 3rem;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    font-size: var(--sl-text-sm);
+    color: var(--sl-color-gray-3);
+  }
+
+  .meta:empty,
+  :global(.pagination-links:empty) {
+    display: none !important;
+  }
+
+  /* Homepage Footer Card */
+  .footer-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    padding: 1.25rem 1.75rem;
+    margin: 1rem 0 2rem;
+    background-color: var(--m3-surface-container);
+    border: none !important;
+    outline: none !important;
+    border-radius: var(--m3-shape-large, 20px);
+  }
+
+  .footer-left {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.88rem;
+    color: var(--m3-on-surface-variant);
+    line-height: 1.5;
+  }
+
+  .footer-left strong {
+    color: var(--m3-on-surface);
+    font-weight: 700;
+  }
+
+  .footer-right {
+    display: flex;
+    align-items: center;
+  }
+
+  /* Pill Astro Badge */
+  .astro-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.5rem 1.15rem;
+    border-radius: var(--m3-shape-pill, 9999px);
+    background-color: var(--m3-surface-container-highest);
+    color: var(--m3-on-surface);
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-decoration: none !important;
+    border: none !important;
+    outline: none !important;
+    transition: transform 0.15s ease, background-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+  }
+
+  .astro-icon {
+    flex-shrink: 0;
+    color: #ff5d01;
+    transition: transform 0.2s ease;
+  }
+
+  .astro-badge:hover {
+    transform: translateY(-2px);
+    background-color: var(--m3-surface-container-high);
+    color: var(--m3-primary);
+  }
+
+  .astro-badge:hover .astro-icon {
+    transform: scale(1.12);
+  }
+
+  @media (max-width: 640px) {
+    .footer-card {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 0.85rem;
+      padding: 1.25rem 1.25rem;
+    }
+
+    .footer-left {
+      text-align: center;
+      justify-content: center;
+    }
+  }
+</style>

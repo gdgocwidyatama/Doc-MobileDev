@@ -1,0 +1,13 @@
+# Dependencies
+/node_modules
+
+# Build output
+/dist
+/.astro
+
+# Misc
+.DS_Store
+*.log
+.env*
+.wrangler/
+.playwright-mcp/
