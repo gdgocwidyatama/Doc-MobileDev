@@ -5,6 +5,7 @@
   <img src="https://img.shields.io/badge/Bun-FCD34D?style=for-the-badge&logo=bun&logoColor=black" alt="Bun">
   <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS">
   <img src="https://img.shields.io/badge/Cloudflare_Pages-F38020?style=for-the-badge&logo=cloudflarepages&logoColor=white" alt="Cloudflare Pages">
+  <a href="https://doc-mobiledev.pages.dev/llms.txt"><img src="https://img.shields.io/badge/llms.txt-Standard-8A2BE2?style=for-the-badge" alt="llms.txt"></a>
   <a href="https://github.com/gdgocwidyatama/MobileDev"><img src="https://img.shields.io/badge/MobileDev-Starter%20Template-4285F4?style=for-the-badge&logo=github&logoColor=white" alt="Starter Template"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPL--3.0-blue?style=for-the-badge" alt="License"></a>
 </p>
@@ -73,6 +74,16 @@ bun run preview
 ```bash
 bun run deploy
 ```
+
+---
+
+## AI Agent & LLM Integration (llms.txt)
+
+Dokumentasi ini mendukung standar **[llms.txt](https://llmstxt.org/)** agar peserta yang menggunakan AI coding assistant (Cursor, Claude Code, GitHub Copilot, Windsurf, dll.) dapat langsung menyuplai konteks resmi modul:
+
+- **Index Entrypoint**: [`https://doc-mobiledev.pages.dev/llms.txt`](https://doc-mobiledev.pages.dev/llms.txt)
+- **Ringkas / Compact**: [`https://doc-mobiledev.pages.dev/llms-small.txt`](https://doc-mobiledev.pages.dev/llms-small.txt)
+- **Koleksi Lengkap**: [`https://doc-mobiledev.pages.dev/llms-full.txt`](https://doc-mobiledev.pages.dev/llms-full.txt)
 
 ---
 

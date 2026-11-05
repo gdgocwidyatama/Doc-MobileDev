@@ -34,7 +34,35 @@ export default defineConfig({
         },
       },
       plugins: [
-        starlightLlmsTxt(),
+        starlightLlmsTxt({
+          projectName: 'Doc-MobileDev',
+          description: 'Portal dokumentasi teknis dan modul panduan hands-on resmi untuk peserta GDGoC Study Jam: Mobile Development Android Jetpack Compose (LuminaWalls App).',
+          details: `
+          Panduan untuk AI Agent & LLM pembantu peserta:
+          - Seluruh antarmuka menggunakan **Jetpack Compose 100% Kotlin** murni dan Material 3 (androidx.compose.material3).
+          - Jangan gunakan View XML untuk layout tampilan antarmuka (UI).
+          - Seluruh dependensi library telah terdaftar di version catalog gradle/libs.versions.toml. Cukup panggil alias libs.xxx di app/build.gradle.kts.
+          - Arsitektur deklaratif: UI = f(state) dengan remember, mutableStateOf, dan StateFlow.
+          - Target minimum SDK: API 24 (Android 7.0), Kotlin DSL (build.gradle.kts).
+          `,
+          optionalLinks: [
+            {
+              label: 'Live Website Documentation',
+              url: 'https://doc-mobiledev.pages.dev/',
+              description: 'Situs web panduan peserta yang dapat diakses langsung oleh peramban.',
+            },
+            {
+              label: 'Starter Template Repo',
+              url: 'https://github.com/gdgocwidyatama/MobileDev',
+              description: 'Repositori starter template peserta berisi TODO per sesi.',
+            },
+            {
+              label: 'Capstone Submission Portal',
+              url: 'https://github.com/gdgocwidyatama/Substitution-MobileDev',
+              description: 'Repositori etalase pengumpulan tugas akhir proyek peserta.',
+            },
+          ],
+        }),
       ],
       expressiveCode: {
         themes: ['catppuccin-mocha', 'catppuccin-latte'],
