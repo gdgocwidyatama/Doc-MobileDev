@@ -44,6 +44,26 @@ Setelah itu, klik tombol **Sync Now** di sudut kanan atas editor Android Studio 
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/data/repository/UserPreferencesRepository.kt`.
 
+Pastikan impor berikut tersedia di bagian atas berkas:
+
+```kotlin
+import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+```
+
 Kita akan mengganti in-memory state dengan membaca dan menulis berkas DataStore lokal:
 
 ### 1. Inisialisasi Berkas DataStore
@@ -121,6 +141,27 @@ Gulir ke bagian paling bawah berkas pada blok `companion object { ... }`, lalu t
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/screens/home/HomeScreen.kt`.
 
+Pastikan impor berikut tersedia di bagian atas berkas:
+
+```kotlin
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import com.gdgoc.luminawalls.R
+import com.gdgoc.luminawalls.ui.components.WallpaperCard
+```
+
 Kita akan melengkapi header dan mengubah tata letak katalog wallpaper:
 
 ### 1. Tambahkan Ikon Menu Settings di Header
@@ -184,6 +225,19 @@ Hapus blok `if (wallpapers.isNotEmpty()) { Row { ... } }` dari Sesi 2, lalu gant
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/screens/settings/SettingsScreen.kt`.
 
+Pastikan impor berikut sudah tersedia di bagian atas berkas:
+
+```kotlin
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.BrightnessAuto
+import androidx.compose.material.icons.rounded.DarkMode
+import androidx.compose.material.icons.rounded.LightMode
+import androidx.compose.ui.res.stringResource
+import com.gdgoc.luminawalls.R
+import com.gdgoc.luminawalls.data.repository.AppThemeMode
+import com.gdgoc.luminawalls.ui.components.itemShapeFor
+```
+
 Cari baris komentar berikut:
 
 ```kotlin
@@ -228,6 +282,24 @@ Tempel tiga pilihan mode tema berikut tepat di bawah komentar tersebut:
 ## Langkah 5: Navigasi Settings & Pasang FloatingNavBar di `LuminaMainApp.kt`
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/LuminaMainApp.kt`.
+
+Pastikan impor animasi dan navigasi berikut sudah tersedia di bagian atas:
+
+```kotlin
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.EaseInCubic
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
+import com.gdgoc.luminawalls.ui.components.FloatingNavBar
+```
 
 Terdapat dua bagian navigasi yang perlu kita lengkapi:
 

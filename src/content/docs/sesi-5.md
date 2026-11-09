@@ -150,6 +150,15 @@ Tempel dua baris pembaruan state berikut:
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/components/NetworkImage.kt`.
 
+Pastikan impor Coil berikut sudah tersedia di bagian atas:
+
+```kotlin
+import androidx.compose.ui.platform.LocalContext
+import coil.compose.SubcomposeAsyncImage
+import coil.request.ImageRequest
+import com.gdgoc.luminawalls.data.image.ImageCacheManager
+```
+
 Cari baris komentar berikut di dalam fungsi `NetworkImage`:
 
 ```kotlin
@@ -195,6 +204,24 @@ Hapus blok `Box` placeholder statis bawaan template di bawah komentar tersebut, 
 ## Langkah 5: Pasang Wallpaper Native di `PreviewScreen.kt`
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/screens/preview/PreviewScreen.kt`.
+
+Pastikan impor berikut sudah ada di bagian atas:
+
+```kotlin
+import android.app.WallpaperManager
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.sp
+import com.gdgoc.luminawalls.R
+```
 
 Kita akan melengkapi tombol pemicu dan eksekusi penggantian wallpaper sistem:
 

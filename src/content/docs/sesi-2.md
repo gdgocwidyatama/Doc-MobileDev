@@ -43,6 +43,14 @@ Sehingga blok `setContent` di `MainActivity.kt` menjadi bersih dan ringkas seper
         }
 ```
 
+Pastikan berkas mengimpor komponen orkestrator di baris import paling atas:
+
+```kotlin
+import com.gdgoc.luminawalls.ui.LuminaMainApp
+```
+
+> **Tips Pemula**: Jika teks `LuminaMainApp` berwarna merah di Android Studio, letakkan kursor pada teks tersebut lalu tekan tombol `Alt + Enter` (atau `Option + Return` di Mac), lalu pilih **Import class**.
+>
 > `LuminaMainApp()` bertindak sebagai nahkoda utama aplikasi. Di dalamnya sudah disiapkan gerbang state: jika pengguna baru pertama kali membuka aplikasi, sistem otomatis menampilkan `SetupScreen`. Jika proses onboarding sudah pernah diselesaikan, aplikasi langsung mengarahkan pengguna ke halaman utama `HomeScreen`.
 
 ---
@@ -86,6 +94,14 @@ Tepat di bawah baris komentar tersebut, ubah deklarasi `private val initialWallp
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/components/SetupComponents.kt`.
 
+Pastikan impor berikut sudah tersedia di bagian atas berkas:
+
+```kotlin
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.res.stringResource
+import com.gdgoc.luminawalls.R
+```
+
 Cari baris komentar berikut di dalam fungsi `SetupBottomBar`:
 
 ```kotlin
@@ -127,6 +143,20 @@ Tempel kode tombol Material 3 berikut tepat di bawah komentar tersebut:
 ## Langkah 4: Lengkapi Alur Langkah di `SetupScreen.kt`
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/setup/SetupScreen.kt`.
+
+Pastikan impor berikut sudah ada di bagian atas berkas:
+
+```kotlin
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.res.stringResource
+import com.gdgoc.luminawalls.R
+import com.gdgoc.luminawalls.ui.components.LuminaListItem
+import com.gdgoc.luminawalls.ui.components.SetupBottomBar
+import com.gdgoc.luminawalls.ui.components.SetupHeader
+```
 
 Di berkas ini terdapat empat slot TODO yang perlu kita isi secara berurutan:
 
@@ -182,7 +212,7 @@ Tempel header pemilihan tema:
         )
 ```
 
-Tepat beberapa baris di bawahnya pada fungsi yang sama, cari komentar:
+Tepat di bawahnya pada fungsi yang sama, cari komentar:
 
 ```kotlin
         // TODO: [Session 2] Tulis opsi tema menggunakan Column & LuminaListItem di bawah sini:
@@ -230,6 +260,25 @@ Tempel header penutup berikut:
 ## Langkah 5: Merakit Stacking Card di `WallpaperCard.kt`
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/components/WallpaperCard.kt`.
+
+Pastikan impor berikut sudah tersedia di bagian atas:
+
+```kotlin
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+```
 
 Cari baris komentar berikut di dalam fungsi `WallpaperCard`:
 
@@ -306,6 +355,17 @@ Tempel implementasi kartu berlapis (*Stacking Card*) berikut tepat di bawahnya:
 ## Langkah 6: Tampilkan Kartu Perdana di `HomeScreen.kt`
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/screens/home/HomeScreen.kt`.
+
+Pastikan impor berikut sudah tersedia:
+
+```kotlin
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
+import com.gdgoc.luminawalls.ui.components.WallpaperCard
+```
 
 Cari baris komentar berikut:
 

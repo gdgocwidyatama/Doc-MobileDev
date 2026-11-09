@@ -8,7 +8,7 @@ description: "Panduan koding hands-on Sesi 4: implementasi chip WallpaperTag, to
 Selamat datang di materi koding **Sesi 4**!
 
 Di sesi ini, kita akan menerapkan prinsip-prinsip desain modern **Material 3 Expressive** dan menyambungkan data eksternal:
-1. **Material Design Tokens & Reusability**: Memahami sistem warna semantik dan memecah antarmuka menjadi komponen modular yang bisa digunakan kembali (*reusable components*).
+1. **Material Design Tokens & Reusability**: Memahami sistem warna semantik (`surfaceVariant`, `onSurfaceVariant`) dan memecah antarmuka menjadi komponen modular yang bisa digunakan kembali (*reusable components*).
 2. **Chip Kategori `WallpaperTag`**: Menambahkan label kategori semi-transparan di atas kartu wallpaper.
 3. **Standarisasi Navigasi Kembali**: Menggunakan tombol bulat `FilledIconButton` yang seragam di seluruh sub-layar.
 4. **Alur Pratinjau Wallpaper**: Mengaktifkan navigasi dari kartu beranda menuju layar pratinjau penuh (`PreviewScreen`).
@@ -22,37 +22,59 @@ Seluruh kode yang kamu tulis di bawah ini dipasangkan langsung ke baris komentar
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/components/WallpaperCard.kt`.
 
-Gunakan `Ctrl + F` (atau `Cmd + F` di Mac) untuk mencari baris komentar berikut:
+Pastikan impor berikut sudah tersedia di bagian atas berkas:
 
 ```kotlin
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+```
+
+Pada berkas ini terdapat dua hal yang kita lengkapi:
+
+### 1. Isi Badan Fungsi `WallpaperTag`
+Di bagian atas berkas, fungsi `WallpaperTag` sudah disiapkan oleh template. Cari baris komentar:
+
+```kotlin
+@Composable
+fun WallpaperTag(
+    text: String,
+    modifier: Modifier = Modifier,
+) {
+
     // TODO: [Session 4] Tulis komponen chip label / tag menggunakan Surface & Text di bawah sini:
 ```
 
-Tepat di bawah baris komentar tersebut, tambahkan fungsi composable pembantu `WallpaperTag`:
+Tempel kode badan fungsi berikut tepat di bawah komentar tersebut:
 
 ```kotlin
-    @Composable
-    fun WallpaperTag(
-        text: String,
-        modifier: Modifier = Modifier,
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f),
+        modifier = modifier,
     ) {
-        Surface(
-            shape = RoundedCornerShape(8.dp),
-            color = Color.Black.copy(alpha = 0.45f),
-            modifier = modifier,
-        ) {
-            Text(
-                text = text,
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Medium,
-                color = Color.White.copy(alpha = 0.9f),
-                modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
-            )
-        }
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+        )
     }
 ```
 
-Sekarang panggil komponen `WallpaperTag` tersebut di dalam `WallpaperCard`: tepat di bawah baris teks `Text(text = "By ${wallpaper.author}", ...)`, tambahkan blok baris chip berikut:
+### 2. Tampilkan Tag di Bawah Nama Author
+Gulir ke fungsi `WallpaperCard`. Di dalam kontainer `Column` informasi teks, tepat di bawah baris:
+
+```kotlin
+                Text(
+                    text = "By ${wallpaper.author}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.White.copy(alpha = 0.8f),
+                )
+```
+
+Tambahkan blok baris penampil chip kategori berikut:
 
 ```kotlin
                 if (wallpaper.tags.isNotEmpty()) {
@@ -67,7 +89,7 @@ Sekarang panggil komponen `WallpaperTag` tersebut di dalam `WallpaperCard`: tepa
                 }
 ```
 
-> `WallpaperTag` membungkus teks kategori dengan `Surface` semi-transparan warna gelap (`alpha = 0.45f`). Ini memberikan aksen visual modern khas Material 3 tanpa menutupi detail foto wallpaper di baliknya.
+> `WallpaperTag` memanfaatkan token semantik Material 3 (`surfaceVariant` dan `onSurfaceVariant`) dengan transparansi `0.8f`. Warna chip ini otomatis beradaptasi mengikuti tema gelap atau terang sistem secara harmonis tanpa menutupi keindahan foto wallpaper di baliknya.
 
 ---
 
@@ -77,6 +99,20 @@ Untuk menciptakan pengalaman navigasi yang konsisten, kita menggunakan tombol bu
 
 ### 1. Pasang di `PreviewScreen.kt`
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/screens/preview/PreviewScreen.kt`.
+
+Pastikan impor berikut tersedia di bagian atas:
+
+```kotlin
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.res.stringResource
+import com.gdgoc.luminawalls.R
+```
 
 Cari baris komentar berikut:
 
@@ -142,6 +178,14 @@ Tempel satu baris navigasi berikut:
 ## Langkah 4: Hubungkan REST API GitHub di `ContributorRepository.kt`
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/data/repository/ContributorRepository.kt`.
+
+Pastikan impor koneksi jaringan dan JSON berikut sudah ada di bagian atas berkas:
+
+```kotlin
+import java.net.HttpURLConnection
+import java.net.URL
+import org.json.JSONArray
+```
 
 Kita akan melengkapi dua slot pada repositori ini:
 
@@ -216,31 +260,39 @@ Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/screens/contributors/C
 
 Kita akan melengkapi tata letak konten dan daftar kontributor:
 
-### 1. Pasang Blok Konten Utama
+### 1. Pasang Tiga Blok Konten Utama
 Cari baris komentar berikut di dalam `LazyColumn`:
 
 ```kotlin
             // TODO: [Session 4] Buat LuminaHeroCard, GdgocTeamBlock, dan ContributorsBlock di bawah sini:
 ```
 
-Tempel susunan kartu informasi dan blok tim berikut:
+Tempel susunan kartu informasi, blok tim GDGoC, dan daftar kontributor berikut:
 
 ```kotlin
-            item {
+            item(key = "hero_card") {
                 LuminaHeroCard()
             }
-            item {
-                Spacer(modifier = Modifier.height(20.dp))
-                GdgocTeamBlock()
+
+            item(key = "gdgoc_team") {
+                SectionHeader(
+                    title = androidx.compose.ui.res.stringResource(com.gdgoc.luminawalls.R.string.about_team_title),
+                    subtitle = androidx.compose.ui.res.stringResource(com.gdgoc.luminawalls.R.string.about_team_subtitle),
+                )
+                GdgocTeamBlock(
+                    onInstructorClick = { openUrl("https://github.com/pavelc4") },
+                    onCoreTeamClick = { openUrl("https://www.instagram.com/gdgocwidyatama") },
+                )
             }
-            item {
-                Spacer(modifier = Modifier.height(24.dp))
+
+            item(key = "contributors_list") {
+                SectionHeader(
+                    title = androidx.compose.ui.res.stringResource(com.gdgoc.luminawalls.R.string.about_contributors_title),
+                    subtitle = androidx.compose.ui.res.stringResource(com.gdgoc.luminawalls.R.string.about_contributors_subtitle),
+                )
                 ContributorsBlock(
                     contributors = contributors,
-                    onOpenGithub = { url ->
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                        context.startActivity(intent)
-                    },
+                    onOpenGithub = { openUrl(it) },
                 )
             }
 ```
@@ -256,11 +308,12 @@ Tempel perulangan daftar kontributor menggunakan komponen `LuminaListItem`:
 
 ```kotlin
     Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(3.dp),
     ) {
+        val contributorBadge =
+            androidx.compose.ui.res.stringResource(com.gdgoc.luminawalls.R.string.about_badge_contributor)
         contributors.forEachIndexed { index, contributor ->
-            val contributorBadge = if (index < 3) "#${index + 1}" else null
             val avatarUrl = contributor.avatarUrl ?: "https://github.com/${contributor.name}.png"
             LuminaListItem(
                 title = contributor.name,
@@ -288,7 +341,7 @@ Tempel perulangan daftar kontributor menggunakan komponen `LuminaListItem`:
     }
 ```
 
-> Komponen `LuminaListItem` secara cerdas menampilkan foto avatar GitHub kontributor di sisi kiri, username dan bio di tengah, serta badge peringkat kontributor (`#1`, `#2`, `#3`) di sisi kanan. Ketika baris kontributor diketuk, intent implicit `Intent.ACTION_VIEW` langsung membuka halaman profil GitHub kontributor di aplikasi browser.
+> Komponen `LuminaListItem` secara cerdas menampilkan foto avatar GitHub kontributor di sisi kiri, username dan bio di tengah, serta badge peran kontributor di sisi kanan. Ketika baris kontributor diketuk, fungsi lambda `openUrl(it)` langsung membuka halaman profil GitHub kontributor di aplikasi browser.
 
 ---
 
