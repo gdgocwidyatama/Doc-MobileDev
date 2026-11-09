@@ -144,6 +144,159 @@ Tempel dua baris pembaruan state berikut:
 
 > Alur ini mengimplementasikan pola **Offline-First Resilience**: jika smartphone terhubung ke internet, aplikasi akan menampilkan katalog terbaru dari Cloudflare Workers. Namun jika terjadi gangguan koneksi atau server lambat, aplikasi otomatis menampilkan data dummy cadangan sehingga pengguna tidak melihat layar kosong.
 
+<details>
+<summary><strong>Opsi Cepat: Salin Seluruh Isi File `WallpaperRepository.kt`</strong></summary>
+
+Jika kamu ingin memastikan seluruh import jaringan, deserialisasi JSON, dan fungsi repository terpasang sempurna tanpa edit per-bagian, tekan `Ctrl + A` lalu timpa seluruh isi berkas `WallpaperRepository.kt` dengan kode lengkap berikut:
+
+```kotlin
+package com.gdgoc.luminawalls.data.repository
+
+import com.gdgoc.luminawalls.data.model.Wallpaper
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONObject
+import java.util.concurrent.TimeUnit
+
+/**
+ * Repository data wallpaper (lokal dan remote).
+ */
+object WallpaperRepository {
+
+    private const val BASE_URL = "https://lumiwalls.pavelc4.workers.dev"
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    val httpClient: OkHttpClient = OkHttpClient.Builder()
+        .connectTimeout(15, TimeUnit.SECONDS)
+        .readTimeout(15, TimeUnit.SECONDS)
+        .retryOnConnectionFailure(true)
+        .build()
+
+    private val initialWallpapers = listOf(
+        Wallpaper(
+            id = "1",
+            title = "Cyber Horizon",
+            author = "Dimas",
+            category = "Cyberpunk",
+            tags = listOf("Cyber", "Minimalist"),
+        ),
+        Wallpaper(
+            id = "2",
+            title = "Sunset Bloom",
+            author = "Ariya",
+            category = "Nature",
+            tags = listOf("Nature", "Sunset"),
+        ),
+    )
+
+    private val _wallpapers = MutableStateFlow<List<Wallpaper>>(initialWallpapers)
+    val wallpapers: StateFlow<List<Wallpaper>> = _wallpapers.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    init {
+        loadWallpapers()
+    }
+
+    private val trustAllSslContext: javax.net.ssl.SSLContext by lazy {
+        val trustAllCerts = arrayOf<javax.net.ssl.TrustManager>(object : javax.net.ssl.X509TrustManager {
+            override fun checkClientTrusted(chain: Array<out java.security.cert.X509Certificate>?, authType: String?) {}
+            override fun checkServerTrusted(chain: Array<out java.security.cert.X509Certificate>?, authType: String?) {}
+            override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> = arrayOf()
+        })
+        val sc = javax.net.ssl.SSLContext.getInstance("TLS")
+        sc.init(null, trustAllCerts, java.security.SecureRandom())
+        sc
+    }
+
+    suspend fun fetchWallpapersFromApi(category: String? = null): List<Wallpaper> = withContext(Dispatchers.IO) {
+        try {
+            val urlString = if (category.isNullOrBlank() || category == "all") {
+                "$BASE_URL/wallpapers"
+            } else {
+                "$BASE_URL/wallpapers?category=$category"
+            }
+
+            val jsonStr = try {
+                val conn = java.net.URL(urlString).openConnection() as javax.net.ssl.HttpsURLConnection
+                conn.sslSocketFactory = trustAllSslContext.socketFactory
+                conn.hostnameVerifier = javax.net.ssl.HostnameVerifier { _, _ -> true }
+                conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile)")
+                conn.setRequestProperty("Accept", "application/json")
+                conn.connectTimeout = 8000
+                conn.readTimeout = 8000
+                if (conn.responseCode == java.net.HttpURLConnection.HTTP_OK) {
+                    conn.inputStream.bufferedReader().use { it.readText() }
+                } else {
+                    ""
+                }
+            } catch (e: Exception) {
+                ""
+            }
+
+            if (jsonStr.isNotBlank()) {
+                val root = JSONObject(jsonStr)
+                val items = root.getJSONArray("items")
+                val result = mutableListOf<Wallpaper>()
+
+                for (i in 0 until items.length()) {
+                    val item = items.getJSONObject(i)
+                    val id = item.optString("id")
+                    val title = item.optString("title")
+                    val author = item.optString("author", "pavelc4")
+                    val cat = item.optString("category", "all")
+                    val imageUrl = item.optString("imageUrl")
+                    val thumbUrl = item.optString("thumbUrl", imageUrl)
+                    val downloadUrl = item.optString("downloadUrl", imageUrl)
+
+                    result.add(
+                        Wallpaper(
+                            id = id,
+                            title = title,
+                            author = author,
+                            category = cat,
+                            imageUrl = imageUrl,
+                            thumbUrl = thumbUrl,
+                            downloadUrl = downloadUrl,
+                            tags = if (cat.isNotBlank() && cat != "all") listOf(cat) else emptyList(),
+                        )
+                    )
+                }
+                if (result.isNotEmpty()) result else initialWallpapers
+            } else {
+                initialWallpapers
+            }
+        } catch (_: Exception) {
+            initialWallpapers
+        }
+    }
+
+    fun loadWallpapers(category: String = "all", randomize: Boolean = false) {
+        scope.launch {
+            _isLoading.value = true
+            val items = fetchWallpapersFromApi(category)
+            _wallpapers.value = if (randomize) items.shuffled() else items
+            _isLoading.value = false
+        }
+    }
+
+    fun getWallpaperById(id: String): Wallpaper? {
+        return _wallpapers.value.firstOrNull { it.id == id }
+    }
+}
+```
+
+</details>
+
 ---
 
 ## Langkah 4: Pasang Image Loader Coil di `NetworkImage.kt`
@@ -198,6 +351,156 @@ Hapus blok `Box` placeholder statis bawaan template di bawah komentar tersebut, 
 ```
 
 > Parameter `.crossfade(300)` memberikan animasi transisi memudar yang halus selama 300 milidetik saat gambar selesai diunduh dari internet, mencegah efek visual berkedip (*flicker*) saat pengguna melakukan scroll cepat pada galeri.
+
+<details>
+<summary><strong>Opsi Cepat: Salin Seluruh Isi File `NetworkImage.kt`</strong></summary>
+
+Jika kamu ingin langsung menyematkan helper image loader Coil dan komponen `NetworkImage` secara utuh tanpa risiko salah meletakkan fungsi atau import, tekan `Ctrl + A` lalu timpa isi berkas `NetworkImage.kt` dengan kode berikut:
+
+```kotlin
+package com.gdgoc.luminawalls.ui.components
+
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
+import android.net.Uri
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import coil.ImageLoader
+import coil.compose.SubcomposeAsyncImage
+import coil.decode.DataSource
+import coil.decode.ImageSource
+import coil.fetch.FetchResult
+import coil.fetch.Fetcher
+import coil.fetch.SourceResult
+import coil.request.ImageRequest
+import coil.request.Options
+import coil.request.SuccessResult
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import okio.buffer
+import okio.source
+import java.net.HttpURLConnection
+import java.net.URL
+
+class NativeHttpFetcher(
+    private val url: String,
+    private val options: Options,
+) : Fetcher {
+    override suspend fun fetch(): FetchResult = withContext(Dispatchers.IO) {
+        val conn = URL(url).openConnection()
+        if (conn is javax.net.ssl.HttpsURLConnection) {
+            val trustAllCerts = arrayOf<javax.net.ssl.TrustManager>(object : javax.net.ssl.X509TrustManager {
+                override fun checkClientTrusted(chain: Array<out java.security.cert.X509Certificate>?, authType: String?) {}
+                override fun checkServerTrusted(chain: Array<out java.security.cert.X509Certificate>?, authType: String?) {}
+                override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> = arrayOf()
+            })
+            val sc = javax.net.ssl.SSLContext.getInstance("TLS")
+            sc.init(null, trustAllCerts, java.security.SecureRandom())
+            conn.sslSocketFactory = sc.socketFactory
+            conn.hostnameVerifier = javax.net.ssl.HostnameVerifier { _, _ -> true }
+        }
+        conn.connectTimeout = 15000
+        conn.readTimeout = 15000
+        conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile)")
+        val stream = conn.getInputStream()
+        SourceResult(
+            source = ImageSource(stream.source().buffer(), options.context),
+            mimeType = conn.contentType,
+            dataSource = DataSource.NETWORK,
+        )
+    }
+
+    class Factory : Fetcher.Factory<Any> {
+        override fun create(data: Any, options: Options, imageLoader: ImageLoader): Fetcher? {
+            val url = when (data) {
+                is String -> if (data.startsWith("http://") || data.startsWith("https://")) data else null
+                is Uri -> if (data.scheme == "http" || data.scheme == "https") data.toString() else null
+                else -> null
+            } ?: return null
+            return NativeHttpFetcher(url, options)
+        }
+    }
+}
+
+object ImageCacheManager {
+    private var customLoader: ImageLoader? = null
+
+    fun getImageLoader(context: Context): ImageLoader {
+        return customLoader ?: synchronized(this) {
+            customLoader ?: ImageLoader.Builder(context.applicationContext)
+                .components {
+                    add(NativeHttpFetcher.Factory())
+                }
+                .crossfade(true)
+                .build().also { customLoader = it }
+        }
+    }
+
+    suspend fun loadImage(context: Context, url: String): Bitmap? = withContext(Dispatchers.IO) {
+        if (url.isBlank()) return@withContext null
+        try {
+            val loader = getImageLoader(context)
+            val request = ImageRequest.Builder(context)
+                .data(url)
+                .allowHardware(false)
+                .build()
+            val result = loader.execute(request)
+            if (result is SuccessResult) {
+                (result.drawable as? BitmapDrawable)?.bitmap
+            } else {
+                null
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
+}
+
+@Composable
+fun NetworkImage(
+    url: String?,
+    contentDescription: String?,
+    modifier: Modifier = Modifier,
+    contentScale: ContentScale = ContentScale.Crop,
+) {
+    val context = LocalContext.current
+    val imageLoader = ImageCacheManager.getImageLoader(context)
+
+    SubcomposeAsyncImage(
+        model = ImageRequest.Builder(context)
+            .data(url)
+            .crossfade(300)
+            .build(),
+        imageLoader = imageLoader,
+        contentDescription = contentDescription,
+        contentScale = contentScale,
+        loading = {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+            )
+        },
+        error = {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+            )
+        },
+        modifier = modifier,
+    )
+}
+```
+
+</details>
 
 ---
 

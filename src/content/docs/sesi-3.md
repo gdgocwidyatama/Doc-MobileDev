@@ -135,6 +135,99 @@ Gulir ke bagian paling bawah berkas pada blok `companion object { ... }`, lalu t
 
 > Kunci preferensi ini bertindak sebagai label kolom data di penyimpanan lokal perangkat. Menggunakan `stateIn` memastikan data preferensi selalu siap dibaca seketika (*read-ready*) saat UI Compose pertama kali dirender.
 
+<details>
+<summary><strong>Opsi Cepat: Salin Seluruh Isi File `UserPreferencesRepository.kt`</strong></summary>
+
+Jika kamu tidak ingin repot mengedit sepotong-sepotong dan ingin langsung menghindari error import atau kurung kurawal, kamu bisa menekan `Ctrl + A` lalu timpa seluruh isi berkas `UserPreferencesRepository.kt` dengan kode lengkap berikut:
+
+```kotlin
+package com.gdgoc.luminawalls.data.repository
+
+import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+
+enum class AppThemeMode {
+    FOLLOW_SYSTEM,
+    LIGHT,
+    DARK,
+}
+
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "luminawalls_prefs")
+
+class UserPreferencesRepository private constructor(private val context: Context) {
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    val isSetupCompleted: StateFlow<Boolean> = context.dataStore.data
+        .map { preferences -> preferences[KEY_SETUP_COMPLETED] ?: false }
+        .stateIn(
+            scope = scope,
+            started = SharingStarted.Eagerly,
+            initialValue = false,
+        )
+
+    val themeMode: StateFlow<AppThemeMode> = context.dataStore.data
+        .map { preferences ->
+            val modeName = preferences[KEY_THEME_MODE] ?: AppThemeMode.FOLLOW_SYSTEM.name
+            try {
+                AppThemeMode.valueOf(modeName)
+            } catch (_: Exception) {
+                AppThemeMode.FOLLOW_SYSTEM
+            }
+        }
+        .stateIn(
+            scope = scope,
+            started = SharingStarted.Eagerly,
+            initialValue = AppThemeMode.FOLLOW_SYSTEM,
+        )
+
+    fun setSetupCompleted(completed: Boolean) {
+        scope.launch {
+            context.dataStore.edit { preferences ->
+                preferences[KEY_SETUP_COMPLETED] = completed
+            }
+        }
+    }
+
+    fun setThemeMode(mode: AppThemeMode) {
+        scope.launch {
+            context.dataStore.edit { preferences ->
+                preferences[KEY_THEME_MODE] = mode.name
+            }
+        }
+    }
+
+    companion object {
+        private val KEY_SETUP_COMPLETED = booleanPreferencesKey("setup_completed")
+        private val KEY_THEME_MODE = stringPreferencesKey("theme_mode")
+
+        @Volatile
+        private var INSTANCE: UserPreferencesRepository? = null
+
+        fun getInstance(context: Context): UserPreferencesRepository {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: UserPreferencesRepository(context.applicationContext).also { INSTANCE = it }
+            }
+        }
+    }
+}
+```
+
+</details>
+
 ---
 
 ## Langkah 3: Tombol Settings & Galeri 2 Kolom di `HomeScreen.kt`
