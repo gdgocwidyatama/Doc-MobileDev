@@ -20,50 +20,6 @@ Semua langkah di bawah merujuk langsung pada baris komentar `// TODO: [Session 5
 
 ---
 
-## Rangkuman Import Sesi 5
-
-Agar proses koding lancar tanpa terganggu pesan error merah karena class belum diimpor, berikut daftar `import` yang dikelompokkan per berkas untuk Sesi 5:
-
-<details open>
-<summary><b>Daftar Import Sesi 5 per Berkas (Klik untuk Buka/Tutup)</b></summary>
-
-### 1. `WallpaperRepository.kt`
-```kotlin
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import org.json.JSONObject
-import java.util.concurrent.TimeUnit
-```
-
-### 2. `NetworkImage.kt`
-```kotlin
-import androidx.compose.ui.platform.LocalContext
-import coil.compose.SubcomposeAsyncImage
-import coil.request.ImageRequest
-import com.gdgoc.luminawalls.data.image.ImageCacheManager
-```
-
-### 3. `PreviewScreen.kt`
-```kotlin
-import android.app.WallpaperManager
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.sp
-import com.gdgoc.luminawalls.R
-```
-
-</details>
-
----
-
 ## Langkah 1: Pasang Dependensi OkHttp & Coil di `app/build.gradle.kts`
 
 Buka berkas `app/build.gradle.kts`.
