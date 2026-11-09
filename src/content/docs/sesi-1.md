@@ -245,6 +245,8 @@ Buka berkas `app/src/main/res/values/themes.xml`. Kamu akan melihat komentar TOD
         <item name="windowSplashScreenBackground">@color/splash_background</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/gdg_logo</item>
         <item name="postSplashScreenTheme">@style/Theme.LuminaWalls</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
     </style>
     -->
 ```
@@ -256,10 +258,12 @@ Hapus tanda komentar pembuka `<!--` dan penutup `-->` sehingga style `Theme.App.
         <item name="windowSplashScreenBackground">@color/splash_background</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/gdg_logo</item>
         <item name="postSplashScreenTheme">@style/Theme.LuminaWalls</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
     </style>
 ```
 
-> Style ini memberitahu sistem Android untuk menampilkan warna latar cream (`@color/splash_background`) dan logo resmi GDGoC (`@drawable/gdg_logo`) saat aplikasi sedang dimuat ke memori, lalu otomatis berganti ke tema utama (`Theme.LuminaWalls`).
+> Style ini memberitahu sistem Android untuk menampilkan warna latar cream (`@color/splash_background`) dan logo resmi GDGoC (`@drawable/gdg_logo`) saat aplikasi sedang dimuat ke memori, lalu otomatis berganti ke tema utama (`Theme.LuminaWalls`). Item `windowNoTitle` dan `windowActionBar` memastikan jendela aplikasi bebas dari action bar native sistem.
 
 #### Langkah 3: Pasang Style di `app/src/main/AndroidManifest.xml`
 Buka berkas `app/src/main/AndroidManifest.xml`. Cari baris atribut tema pada tag `<application>`:
@@ -277,13 +281,44 @@ Ubah nilai atribut `android:theme` di atas komentar tersebut dari `@style/Theme.
 
 > AndroidManifest adalah berkas identitas aplikasi. Mengarahkan tema aplikasi ke `Theme.App.Starting` memastikan sistem Android langsung menyalakan splash screen sejak milidetik pertama icon aplikasi diketuk oleh pengguna.
 
-#### Langkah 4: Uji Coba Jalankan di HP Fisik
+#### Langkah 4: Aktifkan SplashScreen di `app/src/main/kotlin/com/gdgoc/luminawalls/MainActivity.kt`
+Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/MainActivity.kt`.
+
+1. Tambahkan baris impor resmi SplashScreen di bagian atas berkas:
+
+```kotlin
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+```
+
+2. Cari blok fungsi `onCreate()`:
+
+```kotlin
+    override fun onCreate(savedInstanceState: Bundle?) {
+        // TODO: [Session 1] Pasang installSplashScreen() resmi Android di bawah sini sebelum super.onCreate():
+
+        super.onCreate(savedInstanceState)
+```
+
+3. Panggil fungsi `val splashScreen = installSplashScreen()` tepat sebelum `super.onCreate(savedInstanceState)`:
+
+```kotlin
+    override fun onCreate(savedInstanceState: Bundle?) {
+        // TODO: [Session 1] Pasang installSplashScreen() resmi Android di bawah sini sebelum super.onCreate():
+        val splashScreen = installSplashScreen()
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+```
+
+> **Mengapa wajib sebelum `super.onCreate()`?**
+> Library SplashScreen Android membutuhkan inisialisasi awal sebelum Activity dibangun. Pemanggilan `installSplashScreen()` memastikan sistem Android mengendalikan animasi splash dan mulus berpindah ke tema `Theme.LuminaWalls` tanpa memunculkan title bar native bawaan sistem.
+
+#### Langkah 5: Uji Coba Jalankan di HP Fisik
 1. Hubungkan smartphone fisikmu dengan kabel data.
 2. Pastikan nama perangkatmu terpilih di toolbar atas Android Studio.
 3. Klik tombol hijau **Run 'app'** atau tekan shortcut `Shift + F10`.
 4. Perhatikan layar smartphone: splash screen dengan latar cream dan logo GDGoC akan muncul sekejap secara anggun, kemudian langsung masuk ke halaman utama bertuliskan "Hello Android!".
 
-#### Langkah 5: Simpan Checkpoint Sesi 1 ke GitHub
+#### Langkah 6: Simpan Checkpoint Sesi 1 ke GitHub
 Buka tab Terminal di Android Studio, lalu jalankan perintah Git berikut:
 
 ```bash

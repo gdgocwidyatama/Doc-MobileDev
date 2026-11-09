@@ -23,9 +23,10 @@ Seluruh kode yang kamu tulis di bawah ini dipasangkan langsung ke baris komentar
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/MainActivity.kt`.
 
 ### 1. Tambahkan Import di Bagian Atas
-Pastikan berkas mengimpor komponen orkestrator di baris import paling atas:
+Pastikan berkas mengimpor komponen orkestrator dan SplashScreen di baris import paling atas:
 
 ```kotlin
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.gdgoc.luminawalls.ui.LuminaMainApp
 ```
 
@@ -42,13 +43,30 @@ Hapus blok `Surface { Greeting("Android") }` bawaan template di dalam `setConten
             LuminaMainApp()
 ```
 
-Sehingga blok `setContent` di `MainActivity.kt` menjadi bersih dan ringkas seperti ini:
+Sehingga keseluruhan berkas `MainActivity.kt` menjadi bersih dan rapi seperti ini:
 
 ```kotlin
+package com.gdgoc.luminawalls
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.gdgoc.luminawalls.ui.LuminaMainApp
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        val splashScreen = installSplashScreen()
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+
         setContent {
             // TODO: [Session 2] Hapus Greeting(), ganti dengan gerbang state isSetupCompleted (SetupScreen vs HomeScreen) di bawah sini:
             LuminaMainApp()
         }
+    }
+}
 ```
 
 > `LuminaMainApp()` bertindak sebagai nahkoda utama aplikasi. Di dalamnya sudah disiapkan gerbang state: jika pengguna baru pertama kali membuka aplikasi, sistem otomatis menampilkan `SetupScreen`. Jika proses onboarding sudah pernah diselesaikan, aplikasi langsung mengarahkan pengguna ke halaman utama `HomeScreen`.
@@ -71,9 +89,9 @@ Tepat di bawah baris komentar tersebut, ubah deklarasi `private val initialWallp
     private val initialWallpapers = listOf(
         Wallpaper(
             id = "1",
-            title = "Cyber Horizon",
-            author = "Dimas",
-            category = "Cyberpunk",
+            title = "lone",
+            author = "Yanto",
+            category = "Anu",
             tags = listOf("Cyber", "Minimalist"),
         ),
         Wallpaper(
@@ -241,6 +259,9 @@ Tempel daftar pilihan tema menggunakan `LuminaListItem`:
             }
         }
 ```
+
+> **Catatan Tata Letak Tengah**:
+> Kontainer `Column` pembungkus di `PersonalizationStep()` menggunakan `verticalArrangement = Arrangement.Center` dan `modifier = Modifier.fillMaxSize().padding(24.dp)` agar posisi judul dan kartu pilihan tema tersusun rapi pas di tengah layar, senada dengan slide `WelcomeStep()` dan `DoneStep()`.
 
 ### 5. Header Penutup Langkah 3 di `DoneStep()`
 Gulir ke fungsi `DoneStep()`, lalu cari komentar:
