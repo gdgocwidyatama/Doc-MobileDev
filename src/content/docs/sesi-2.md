@@ -275,6 +275,111 @@ Bagi peserta yang sudah pernah belajar pemrograman Android berbasis XML atau ing
 
 ---
 
+### 10. Membedah Scaffold & Istilah Komponen yang Asing bagi Pemula
+
+Bagi peserta yang baru pertama kali menyentuh Jetpack Compose, banyak istilah dan komponen yang terdengar asing. Berikut bedah konsep komponen-komponen kunci tersebut:
+
+#### A. Apa itu `Scaffold`? (Rangka Perancah Layar Penuh)
+Secara harfiah dalam dunia konstruksi, *scaffold* adalah perancah (rangka bambu atau besi penyangga saat membangun gedung).
+
+Di Android Material Design, **`Scaffold`** adalah kerangka pondasi standar satu layar penuh. Tanpa `Scaffold`, pengembang harus menghitung koordinat dan posisi bilah atas, bilah bawah, dan tombol melayang secara manual agar tidak saling bertubrukan.
+
+```mermaid
+flowchart TD
+    subgraph ScaffoldLayar["Anatomi Rangka Layar: Scaffold"]
+        direction TB
+        TopBar["1. topBar: Tempat Judul Halaman / Bilah Navigasi Atas"]
+        subgraph ContentArea["2. content: Kanvas Konten Utama\nwajib dipasangi Modifier.padding(innerPadding)"]
+            IsiAplikasi["Tampilan Layar (SetupScreen / HomeScreen)"]
+        end
+        BottomBar["3. bottomBar: Bilah Tombol Aksi Bawah (SetupBottomBar)"]
+        FAB["4. floatingActionButton: Tombol Bundar Aksi Utama Melayang"]
+        TopBar --- ContentArea
+        ContentArea --- BottomBar
+        ContentArea -.-> FAB
+    end
+```
+
+`Scaffold` menyediakan "cantolan resmi" (*slots*):
+- `topBar`: Tempat meletakkan judul layar atau tombol kembali (`TopAppBar`).
+- `bottomBar`: Tempat meletakkan tombol navigasi wizard (`SetupBottomBar`) atau bilah menu navigasi bawah (`NavigationBar`).
+- `floatingActionButton`: Tempat tombol aksi cepat bundar melayang (*FAB*).
+- `snackbarHost`: Tempat memunculkan pesan melayang singkat (*pop-up snackbar*).
+- `content`: Ruang kanvas utama untuk antarmuka aplikasimu.
+
+#### Mengapa Parameter `innerPadding` Mutlak Wajib Dipasang?
+Perhatikan blok penulisan konten pada `Scaffold`:
+
+```kotlin
+Scaffold(
+    bottomBar = { SetupBottomBar(...) }
+) { innerPadding ->
+    // innerPadding adalah tiket keamanan layout-mu!
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding) // Wajib dipasang di sini!
+    ) {
+        ...
+    }
+}
+```
+
+> **Hukum Wajib Scaffold**:
+> Parameter `innerPadding` (bertipe `PaddingValues`) adalah hasil kalkulasi otomatis sistem Android yang menghitung tinggi pasti dari `topBar`, `bottomBar`, dan insets navigasi sistem. Jika kamu lupa memasang `.padding(innerPadding)` pada kontainer utamamu, konten aplikasi akan tenggelam dan tertabrak tepat di belakang tombol bilah bawah!
+
+---
+
+#### B. `Surface` vs `Box`: Kapan Harus Menggunakan yang Mana?
+Banyak pemula bertanya: *"Kenapa ada Surface kalau sudah ada Box?"*
+
+- **`Box` (Wadah Tata Letak Polos)**:
+  - Hanyalah wadah layout murni untuk menumpuk elemen secara 3 dimensi (sumbu Z).
+  - Tidak memiliki kecerdasan tema, tidak mengatur warna teks otomatis, dan tidak memiliki elevasi bayangan.
+- **`Surface` (Lempengan Material Design Cerdas)**:
+  - Komponen resmi Material 3 yang merepresentasikan selembar kertas/lempengan fisik yang memiliki kedalaman.
+  - **Kesadaran Warna Otomatis (*Color Awareness*)**: Saat kamu memberi warna `Surface` menjadi gelap, seluruh komponen `Text` atau `Icon` di dalamnya secara otomatis berubah menjadi putih (*onSurface*) tanpa perlu kamu atur manual satu per satu!
+  - **Bentuk & Elevasi**: Memiliki parameter pemotongan sudut (`shape = RoundedCornerShape(24.dp)`) dan parameter bayangan timbul (`shadowElevation = 4.dp`).
+
+---
+
+#### C. `Modifier`: Baju Zirah & Buku Panduan Komponen
+Jika fungsi Composable menentukan **SIAPA DIRINYA** (`Text` adalah teks, `Button` adalah tombol), maka `Modifier` menentukan **BAGAIMANA PENAMPILAN DAN PERILAKUNYA**:
+- Seberapa lebar dan tingginya (`fillMaxSize`, `size`, `aspectRatio`).
+- Seberapa jauh jaraknya dari tetangga (`padding`).
+- Bagaimana latar belakangnya (`background`, `border`, `clip`).
+- Bagaimana ia merespons sentuhan jari (`clickable`, `bouncyClickable`).
+
+> **Analogi**:
+> Composable adalah tubuh manusia, sedangkan `Modifier` adalah pakaian, sepatu, jam tangan, dan tas yang dikenakan. Tubuh yang sama bisa berpakaian santai untuk olahraga, atau mengenakan setelan jas resmi untuk pesta, hanya dengan mengganti rantai `Modifier`-nya.
+
+---
+
+#### D. `Icons.AutoMirrored`: Ikon Cerdas Adaptif Global
+Di berkas `SetupComponents.kt`, kita menggunakan impor ikon:
+
+```kotlin
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+```
+
+Mengapa tidak menggunakan `Icons.Default.ArrowForward` biasa?
+- Di dunia internasional, jutaan pengguna menggunakan bahasa yang dibaca dari kanan ke kiri (**RTL / Right-to-Left**) seperti bahasa Arab, Persia, Urdu, dan Ibrani.
+- Pada sistem RTL, alur "maju ke depan" (*forward*) secara psikologis mengarah ke arah kiri, bukan ke kanan!
+- Fitur `AutoMirrored` adalah kecerdasan bawaan Jetpack Compose: jika smartphone pengguna disetel ke bahasa Arab, ikon panah maju otomatis memutar dirinya sendiri menghadap ke kiri secara cerdas tanpa pengembang perlu membuat logika if-else terpisah.
+
+---
+
+#### E. Perbedaan `Arrangement` vs `Alignment` pada Kolom dan Baris
+Dua istilah ini sering tertukar saat pemula mengatur tata letak:
+- **`Arrangement` (Sumbu Utama / Main-Axis)**:
+  - Mengatur posisi dan pembagian jarak antar anak di sumbu yang searah dengan alur kontainer.
+  - Pada `Column` (sumbu vertikal): `Arrangement.Center` menaruh anak di tengah vertikal, `Arrangement.SpaceBetween` mendorong anak ke ujung atas dan bawah, `Arrangement.spacedBy(10.dp)` memberi celah 10 dp antar anak.
+- **`Alignment` (Sumbu Silang / Cross-Axis)**:
+  - Mengatur posisi anak di sumbu yang tegak lurus dengan kontainer.
+  - Pada `Column` (sumbu silangnya horizontal): `Alignment.CenterHorizontally` menaruh anak di tengah horizontal layar, `Alignment.Start` merapatkan anak ke tepi kiri.
+
+---
+
 ## Panduan Instruktur & Speaker Playbook (Sesi 2)
 
 Bagian ini dirancang khusus untuk Instruktur dan Co-Instructor sebagai panduan ritme kelas selama 120 menit:
