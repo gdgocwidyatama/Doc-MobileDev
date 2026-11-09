@@ -18,74 +18,260 @@ Seluruh kode yang kamu tulis di bawah ini dipasangkan langsung ke baris komentar
 
 ---
 
-## Pondasi Teori: Thinking in Compose
+## Pondasi Teori Mendalam: Thinking in Compose
 
-Sebelum menyentuh baris kode, ada perbedaan mendasar antara cara kerja UI Android tradisional (XML) dengan Jetpack Compose yang wajib dipahami:
+Karena proses koding di Sesi 2 menggunakan templat starter dan blok kode terarah, sebagian besar waktu sesi dapat kita manfaatkan untuk mengupas tuntas cara berpikir deklaratif (*mental model*) di balik Jetpack Compose. Bagian ini membedah teori dari tingkat arsitektur runtime hingga optimasi rendering:
 
-### 1. Paradigma UI = f(state)
-Di Jetpack Compose, tampilan antarmuka (UI) bukanlah objek pohon elemen yang kita ubah propertinya secara manual menggunakan perintah imperatif seperti `button.setText()` atau `progressBar.setVisibility()`. Sebaliknya, UI adalah fungsi matematis dari **State**:
+---
+
+### 1. Paradigma UI = f(state) (Imperatif vs Deklaratif)
+
+Di antarmuka Android tradisional (View XML), tampilan adalah pohon objek yang hidup di memori. Setiap elemen seperti `Button` atau `TextView` memiliki state internalnya sendiri. Pengembang bertindak sebagai mandor yang terus-menerus memanggil perintah mutasi imperatif:
+
+```text
+// Pendekatan Imperatif (XML Lama - Penuh Risiko Desinkronisasi):
+button.setText("Mulai Jelajahi")
+button.setEnabled(true)
+progressBar.setVisibility(View.GONE)
+headerText.setTextColor(Color.GREEN)
+```
+
+Jika aplikasi memiliki 5 kondisi layar yang berbeda, pengembang harus mengelola puluhan kombinasi pemanggilan manual tersebut. Jika ada satu kondisi di mana `progressBar.setVisibility(View.GONE)` lupa dipanggil, antarmuka akan mengalami bug desinkronisasi.
+
+Di Jetpack Compose, tampilan antarmuka (UI) hanyalah fungsi matematis murni dari **State**:
 
 $$\text{UI} = f(\text{State})$$
 
 ```mermaid
 flowchart LR
     State["State (Data / Kondisi Saat Ini)"] -->|"Input ke Composable"| Function["f(State)"]
-    Function -->|"Render Visual"| UI["UI di Layar Smartphone"]
-    User["Aksi Pengguna (Klik / Ketik)"] -.->|"Mengubah Nilai (Event)"| State
+    Function -->|"Render Visual Otomatis"| UI["UI di Layar Smartphone"]
+    User["Aksi Pengguna (Klik / Input)"] -.->|"Mengubah State (Event)"| State
 ```
 
-- **Cara Lama (XML Imperatif)**: Kita bertindak seperti mandor yang memberi instruksi step-by-step: *"Ubah teks tombol jadi 'Mulai', lalu aktifkan tombolnya, lalu sembunyikan loading"*. Jika satu langkah lupa ditulis, UI mengalami bug desinkronisasi.
-- **Cara Baru (Compose Deklaratif)**: Kita cukup mendeskripsikan aturan tampilan untuk setiap kondisi:
-  - *Jika masih di halaman 1 atau 2*: Tampilkan tombol "Lanjut".
-  - *Jika sudah di halaman terakhir*: Tampilkan tombol "Mulai Jelajahi".
-  Sistem Android yang bertanggung jawab menggambar ulang tampilan secara otomatis ketika nilai State berubah.
+Di Compose, kita tidak pernah mengubah antarmuka secara paksa. Kita hanya mendeskripsikan aturan wujud tampilan untuk setiap nilai data:
 
-> **Analogi Sederhana**:
-> XML itu seperti menyuruh tukang mengecat ulang tembok kamar setiap kali kamu ingin ganti warna. Compose itu seperti layar proyektor: proyektor tidak peduli gambarnya apa, ia hanya memancarkan slide yang ada di laptop. Ganti slide di laptop, layar seketika berubah tanpa perlu mengecat apapun.
+```kotlin
+// Pendekatan Deklaratif (Compose - Bebas Bug Desinkronisasi):
+Button(
+    onClick = if (isLastPage) onFinishClicked else onNextClicked,
+    enabled = isEnabled,
+) {
+    Text(text = stringResource(if (isLastPage) R.string.action_get_started else R.string.action_next))
+}
+```
+
+Saat data `isLastPage` berganti dari `false` menjadi `true`, sistem Android secara mandiri menggambar ulang tombol tersebut.
+
+> **Analogi Layar Proyektor**:
+> XML itu seperti menyuruh tukang mengecat ulang tembok aula setiap kali ada pergantian acara. Jetpack Compose itu seperti proyektor digital: proyektor tidak memiliki warna sendiri, ia hanya memancarkan cahaya berdasarkan slide laptop (State). Begitu file slide di laptop diganti, proyeksi di tembok otomatis berubah tanpa ada yang perlu mengecat tembok.
 
 ---
 
-### 2. Siklus Recomposition & Peran `remember`
-- **Recomposition**: Proses ketika Jetpack Compose memanggil ulang fungsi Composable untuk memperbarui tampilan saat State yang dibacanya mengalami perubahan. Compose bekerja cerdas (*intelligent recomposition*): hanya komponen yang membaca data yang berubah yang digambar ulang, sementara komponen statis lainnya tidak disentuh.
-- **Mengapa butuh `remember`?**: Karena fungsi Composable dipanggil berulang kali selama siklus hidup aplikasi, semua variabel lokal biasa di dalamnya akan ter-reset ke nilai awal. Fungsi `remember` bertindak sebagai brankas memori lokal yang menjaga nilai variabel tetap hidup dan tidak hilang selama Composable masih aktif di layar.
-- **`mutableStateOf`**: Membungkus variabel biasa menjadi variabel reaktif yang memiliki "antena". Ketika nilai di dalamnya ditulis ulang, Compose langsung mendeteksi dan menjadwalkan proses recomposition.
+### 2. Tiga Fase Rendering Compose (Composition, Layout, Draw)
+
+Bagaimana sebuah fungsi Kotlin `@Composable` bisa tampil menjadi piksel nyata di layar kaca smartphone? Jetpack Compose memproses antarmuka melalui 3 fase berurutan:
+
+```mermaid
+flowchart LR
+    Fase1["1. Composition\n(Apa yang digambar?)"] --> Fase2["2. Layout\n(Berapa ukuran & posisinya?)"]
+    Fase2 --> Fase3["3. Draw\n(Bagaimana menggambar pikselnya?)"]
+```
+
+1. **Fase Composition (Tree Construction)**:
+   - Compose Compiler mengeksekusi fungsi `@Composable` dan membangun pohon deskripsi UI internal (*Composition Tree / Slot Table*).
+   - Di fase ini, Compose menentukan elemen apa saja yang eksis di layar (misal: ada 1 `Column`, 1 `Text`, dan 3 `LuminaListItem`).
+2. **Fase Layout (Measure & Placement)**:
+   - Setiap elemen mengukur dirinya sendiri (*measure*) dan menentukan koordinat penempatan anak-anaknya (*placement*).
+   - Berbeda dengan XML yang sering melakukan pengukuran berulang (*multi-pass measurement*) yang memicu lag pada hierarki bersarang, Compose menjamin **Single-Pass Measurement** ($O(n)$). Layar selesai diukur dalam satu kali tarikan napas.
+3. **Fase Draw (Rasterization ke GPU)**:
+   - Setelah ukuran dan koordinat piksel (X, Y, Lebar, Tinggi) diketahui pasti, Android melukis elemen tersebut ke kanvas layar menggunakan akselerasi grafis GPU hardware.
+
+> **Tips Performa Kelas Dunia**:
+> Jika kita mengubah animasi warna atau rotasi, usahakan membacanya di fase Draw (misalnya menggunakan lambda modifier `Modifier.drawBehind { ... }` atau `Modifier.graphicsLayer { ... }`). Dengan begitu, Fase 1 (Composition) dan Fase 2 (Layout) dilewati sepenuhnya, sehingga animasi berjalan stabil di 120 FPS tanpa membebani CPU!
 
 ---
 
-### 3. State Hoisting & Unidirectional Data Flow (UDF)
-Komponen antarmuka yang baik adalah komponen yang mandiri dan tidak menyimpan state internalnya sendiri (*stateless*):
-- **State flows down**: Data atau kondisi mengalir turun dari komponen induk (*parent*) ke komponen anak (*child*) melalui parameter fungsi.
-- **Events flow up**: Aksi pengguna (ketukan tombol, geseran layar) mengalir naik dari anak ke induk melalui lambda event callback (`onClick`).
+### 3. Snapshot State System & Perbedaan `remember` vs `rememberSaveable`
+
+Mengapa variabel biasa seperti `var step = 0` tidak bisa menggerakkan UI di Compose?
+
+Android membutuhkan variabel yang memiliki "antena pelacak". Di Compose, teknologi ini disebut **Snapshot State System**:
+- Saat fungsi Composable membaca variabel `mutableStateOf`, Compose Runtime secara otomatis mendaftarkan Composable tersebut sebagai "pelanggan" (*subscriber*).
+- Ketika nilai variabel ditulis ulang (`step = 1`), Compose Runtime menerima sinyal dan memasukkan fungsi tersebut ke dalam antrean **Recomposition**.
+
+```kotlin
+// Salah: Nilai step reset ke 0 setiap kali recomposition terjadi!
+var step = 0
+
+// Benar untuk siklus hidup biasa: Nilai bertahan selama Composable ada di layar
+var step by remember { mutableIntStateOf(0) }
+
+// Sempurna untuk produksi: Nilai bertahan bahkan saat HP diputar (rotasi layar)
+var step by rememberSaveable { mutableIntStateOf(0) }
+```
+
+#### Mengapa Perlu `rememberSaveable`?
+- **`remember`**: Menyimpan nilai di memori RAM selama fungsi Composable masih tertancap di pohon Composition. Namun jika terjadi **Configuration Change** (seperti smartphone diputar dari orientasi tegak ke mendatar, atau pengguna berganti mode gelap), Activity Android dihancurkan dan dibuat ulang oleh OS. Akibatnya, nilai di dalam `remember` akan hilang kembali ke angka 0.
+- **`rememberSaveable`**: Secara otomatis menitipkan nilai variabel ke dalam brankas `SavedStateRegistry` (Android Bundle). Saat layar diputar, nilai tersebut dipulihkan kembali secara ajaib sehingga pengguna tidak kehilangan progres wizard mereka!
+
+---
+
+### 4. State Hoisting & Unidirectional Data Flow (UDF)
+
+Salah satu prinsip terpenting dalam arsitektur software modern adalah **Separation of Concerns** (Pemisahan Tanggung Jawab). 
+
+Jika sebuah komponen antarmuka menyimpan state-nya sendiri, komponen tersebut menjadi sulit diuji (*hard to test*) dan kaku karena tidak bisa dipakai di tempat lain. Kita membagi komponen menjadi dua jenis:
+- **Stateful Component**: Komponen yang memiliki dan mengelola state (contoh: `SetupScreen` yang menyimpan variabel `step`).
+- **Stateless Component**: Komponen murni yang tidak menyimpan state apapun, ia hanya menerima data dan memancarkan aksi (contoh: `SetupBottomBar`).
 
 ```mermaid
 flowchart TD
-    Parent["Parent: SetupScreen (Pemilik State: step)"]
-    Child["Child: SetupBottomBar (Stateless Component)"]
-    Parent -->|"State Down: currentPage, pageCount"| Child
-    Child -->|"Event Up: onNextClicked, onFinishClicked"| Parent
+    subgraph Parent["SetupScreen (Stateful)"]
+        StateHolder["Memiliki State: step (0, 1, 2)"]
+    end
+    subgraph Child["SetupBottomBar (Stateless)"]
+        UIElements["Tombol Navigasi Wizard"]
+    end
+    Parent -->|"State Down (currentPage, pageCount)"| Child
+    Child -->|"Event Up (onNextClicked, onFinishClicked)"| Parent
 ```
 
-Pada LuminaWalls, `SetupBottomBar` tidak tahu-menahu tentang logika navigasi aplikasi. Ia hanya menerima data nomor halaman (`currentPage`) dari `SetupScreen`, dan melempar event saat tombol ditekan (`onNextClicked`) kembali ke atas. Pola memindahkan kepemilikan state ke komponen induk ini disebut **State Hoisting**.
+Pola ini disebut **Unidirectional Data Flow (UDF)**:
+- **State mengalir turun (*State flows down*)**: Nilai data diturunkan dari induk ke anak melalui parameter fungsi biasa.
+- **Event mengalir naik (*Events flow up*)**: Aksi pengguna (seperti klik tombol) dinaikkan kembali ke induk melalui fungsi lambda callback.
 
 ---
 
-### 4. Mental Model Tata Letak Compose (Stacking Box vs Flow)
-- **`Box` (Z-Axis / Kedalaman Berlapis)**: Menumpuk elemen secara 3 dimensi dari belakang ke depan. Digunakan saat merakit `WallpaperCard`:
-  - **Lapisan 1 (Bawah)**: Foto wallpaper melalui `NetworkImage`.
-  - **Lapisan 2 (Tengah)**: Gradasi hitam transparan (*scrim*) untuk memastikan teks selalu terbaca kontras.
-  - **Lapisan 3 (Atas)**: Teks informasi judul dan nama author.
+### 5. Komposisi di Atas Pewarisan (Composition over Inheritance) & Slot API
+
+Di era pemrograman berorientasi objek tradisional (OOP/XML), komponen UI dibuat melalui rantai pewarisan kelas (*inheritance*) yang sangat panjang:
+
+$$\text{Button} \to \text{TextView} \to \text{View} \to \text{Object}$$
+
+Akibatnya, kelas `Button` membawa ratusan fungsi dan beban memori dari `TextView` yang sebenarnya tidak selalu dibutuhkan. Jika kita ingin membuat tombol yang di dalamnya ada ikon di sebelah kiri, progress bar di tengah, dan badge angka di sebelah kanan, XML menjadi sangat rumit.
+
+Jetpack Compose meninggalkan konsep pewarisan dan beralih ke **Slot API**:
+Sebuah Composable dapat menyediakan "slot kosong" berupa parameter lambda `@Composable () -> Unit`. Pengembang bebas memasukkan komponen apapun ke dalam slot tersebut:
+
+```kotlin
+// Contoh Slot API pada LuminaListItem:
+@Composable
+fun LuminaListItem(
+    title: String,
+    subtitle: String,
+    leadingContent: @Composable (() -> Unit)? = null, // Slot Kosong di Kiri
+    trailingContent: @Composable (() -> Unit)? = null, // Slot Kosong di Kanan
+    onClick: () -> Unit,
+)
+```
+
+Dengan Slot API, kita bisa menaruh ikon vector, foto lingkaran, kotak centang (*checkbox*), atau animasi lottie di dalam `leadingContent` tanpa perlu mengubah kode internal `LuminaListItem`. Pola ini memberikan fleksibilitas tanpa batas dengan kode yang sangat bersih.
+
+---
+
+### 6. Sistem Modifier: Urutan Eksekusi Menentukan Hasil
+
+`Modifier` adalah instrumen utama di Compose untuk mengatur ukuran, tata letak, dekorasi latar belakang, dan interaksi sentuhan.
+
+Satu aturan emas yang wajib diingat: **Urutan rantai pemanggilan Modifier sangat berpengaruh (*Order Matters*)**, karena Modifier dibungkus secara berurutan dari luar ke dalam (*decorator pattern*).
+
+Mari kita bandingkan dua urutan berikut:
+
+```kotlin
+// Kasus A: Padding dulu, baru Background
+Modifier
+    .padding(16.dp)
+    .background(Color.Red)
+// Hasil A: Muncul ruang kosong transparan 16.dp di luar, lalu kotak merah di dalamnya.
+
+// Kasus B: Background dulu, baru Padding
+Modifier
+    .background(Color.Red)
+    .padding(16.dp)
+// Hasil B: Seluruh kotak diwarnai merah penuh, lalu konten di dalamnya berjarak 16.dp dari tepi merah.
+```
+
+Pada `WallpaperCard.kt`, kita menyusun modifier dengan urutan:
+1. `.fillMaxWidth()` $\to$ Memastikan kartu selebar kolom yang tersedia.
+2. `.aspectRatio(0.72f)` $\to$ Mengunci proporsi tinggi-lebar kartu poster wallpaper.
+3. `.bouncyClickable(...)` $\to$ Dipasang di akhir agar efek animasi pantulan dan haptic mencakup seluruh permukaan kartu yang sudah terbentuk sempurna.
+
+---
+
+### 7. Anatomi Tumpukan Lapisan (Z-Axis Stacking) pada `WallpaperCard`
+
+Pada kartu wallpaper, kita menggunakan kontainer `Box`. Tidak seperti `Column` (yang menyusun elemen ke bawah) atau `Row` (yang menyusun ke samping), `Box` menyusun elemen saling bertumpuk di sumbu Z (kedalaman):
 
 ```mermaid
 flowchart TD
-    L1["Lapisan 1 (Bawah): NetworkImage / Foto Wallpaper"]
-    L2["Lapisan 2 (Tengah): Gradient Scrim (Gradasi Hitam Transparan)"]
-    L3["Lapisan 3 (Atas): Teks Judul & Nama Author"]
+    subgraph StackingBox["Wadah Kartu (Box dengan RoundedCorner 24.dp)"]
+        direction TB
+        L1["Lapisan 1 (Dasar): NetworkImage memuat foto resolusi tinggi"]
+        L2["Lapisan 2 (Tengah): Gradient Scrim vertikal (Transparan ke Hitam 75%)"]
+        L3["Lapisan 3 (Paling Depan): Teks Judul Putih & Nama Author"]
+    end
     L1 --- L2 --- L3
 ```
 
-- **`Column` (Y-Axis) & `Row` (X-Axis)**:
-  - Menyusun elemen secara linier vertikal atau horizontal.
-  - Pahami perbedaan **`Arrangement`** (mengatur posisi dan jarak di sumbu utama) vs **`Alignment`** (mengatur posisi di sumbu silang). Contohnya `verticalArrangement = Arrangement.Center` memastikan seluruh isi kolom berkumpul tepat di tengah vertikal layar smartphone.
+> **Mengapa Scrim Gradasi Hitam Sangat Krusial?**
+> Di aplikasi galeri atau wallpaper, gambar foto yang dimuat pengguna tidak bisa diprediksi. Ada wallpaper bertema gelap, dan banyak pula yang bertema putih terang (seperti salju atau awan). Jika kita langsung menaruh teks putih di atas foto salju, teks akan hilang (*unreadable*). Gradasi hitam (*scrim*) memastikan rasio kontras warna selalu memenuhi standar aksesibilitas internasional (**WCAG AA**), sehingga teks selalu terbaca tajam di atas wallpaper apapun!
+
+---
+
+### 8. Animasi Deklaratif: `AnimatedContent` vs Animasi Tradisional
+
+Di Sesi 2, wizard onboarding berpindah halaman dengan animasi geser (*slide horizontal*) dan transisi pudar (*crossfade*).
+
+Bandingkan cara membuatnya di masa lalu vs sekarang:
+
+- **Cara Lama (XML)**:
+  - Membuat berkas XML terpisah di folder `res/anim/slide_in_right.xml`, `slide_out_left.xml`.
+  - Menulis interpolator kurva bezier di XML.
+  - Mengikat listener `Animation.AnimationListener` di Activity.
+  - Menangani pembatalan animasi jika pengguna mengetuk tombol berkali-kali secara cepat (*race condition*).
+- **Cara Baru (Compose)**:
+  - Cukup bungkus tampilan dengan fungsi `AnimatedContent(targetState = step)`.
+  - Tentukan aturan transisinya dalam satu baris ekspresif:
+
+```kotlin
+AnimatedContent(
+    targetState = step,
+    transitionSpec = {
+        if (targetState > initialState) {
+            (slideInHorizontally { width -> width } + fadeIn())
+                .togetherWith(slideOutHorizontally { width -> -width } + fadeOut())
+        } else {
+            (slideInHorizontally { width -> -width } + fadeIn())
+                .togetherWith(slideOutHorizontally { width -> width } + fadeOut())
+        }
+    }
+) { targetStep ->
+    // Gambar tampilan langkah yang sesuai
+}
+```
+
+Compose secara otomatis menghitung interpolasi pergerakan piksel di setiap frame layar (60 Hz sampai 120 Hz) menggunakan kurva pegas (*spring physics*) yang sangat halus dan tahan terhadap interupsi klik pengguna.
+
+---
+
+### 9. Kamus Transisi: XML View Klasik vs Jetpack Compose
+
+Bagi peserta yang sudah pernah belajar pemrograman Android berbasis XML atau ingin memetakan konsep lama ke paradigma baru, berikut tabel konversi praktisnya:
+
+| Konsep / Komponen di XML Lama | Padanan Resmi di Jetpack Compose | Keterangan & Karakteristik |
+|---|---|---|
+| `<TextView android:text="..." />` | `Text(text = "...")` | Komponen tipografi teks deklaratif |
+| `<ImageView android:src="..." />` | `Image(...)` / `NetworkImage(...)` | Komponen penampil gambar lokal / remote |
+| `<LinearLayout orientation="vertical">` | `Column(...) { ... }` | Menyusun elemen berurutan secara vertikal |
+| `<LinearLayout orientation="horizontal">` | `Row(...) { ... }` | Menyusun elemen berurutan secara horizontal |
+| `<FrameLayout>` | `Box(...) { ... }` | Menumpuk elemen secara berlapis (sumbu Z) |
+| `<ScrollView>` | `Modifier.verticalScroll(rememberScrollState())` | Memberikan kemampuan gulir pada kontainer |
+| `<RecyclerView>` | `LazyColumn` / `LazyVerticalGrid` | Daur ulang komponen secara efisien saat digulir |
+| `findViewById<Button>(R.id.btn)` | *Ditiadakan sepenuhnya* | Tidak perlu pencarian ID, langsung ikat ke State |
+| `button.setOnClickListener { ... }` | `Button(onClick = { ... })` atau `Modifier.clickable { ... }` | Interaksi klik berbasis fungsi lambda |
+| `<ProgressBar style="?android:attr/progressBarStyle" />` | `CircularProgressIndicator()` | Indikator putar loading Material 3 |
+| `res/values/styles.xml` & `themes.xml` | `MaterialTheme { ... }` | Sistem pewarnaan dan tipografi berbasis tema objek Kotlin |
 
 ---
 
@@ -98,10 +284,10 @@ Bagian ini dirancang khusus untuk Instruktur dan Co-Instructor sebagai panduan r
 | Waktu | Durasi | Agenda | Fokus Pembahasan & Aktivitas |
 |---|---|---|---|
 | 00:00 - 00:10 | 10 Menit | Pembukaan & Review Sesi 1 | Cek kesiapan perangkat fisik peserta dan review hasil Splash Screen dari Sesi 1. |
-| 00:10 - 00:30 | 20 Menit | Teori: Thinking in Compose | Jelaskan konsep `UI = f(state)`, Recomposition, `remember`, dan State Hoisting. |
-| 00:30 - 01:10 | 40 Menit | Hands-on Bagian 1 (Wizard) | Langkah 1 s/d Langkah 4: Hubungkan `MainActivity`, isi data dummy, buat `SetupBottomBar`, dan selesaikan wizard di `SetupScreen`. |
-| 01:10 - 01:45 | 35 Menit | Hands-on Bagian 2 (Kartu) | Langkah 5 & Langkah 6: Rakit Stacking Card `WallpaperCard` dan render 2 kartu perdana di `HomeScreen`. |
-| 01:45 - 01:55 | 10 Menit | Mini-Tantangan Eksperimen | Peserta mencoba tweak parameter UI (aspek rasio, jarak antar komponen) secara mandiri. |
+| 00:10 - 00:50 | 40 Menit | Teori Mendalam: Thinking in Compose | Kupas tuntas paradigma `UI = f(state)`, 3 Fase Rendering, Snapshot State System, Slot API, urutan Modifier, dan perbandingan dengan XML. |
+| 00:50 - 01:25 | 35 Menit | Hands-on Koding Cepat (Langkah 1 s/d 6) | Alur copas terarah ke TODO: Hubungkan `MainActivity`, isi data dummy, lengkapi wizard di `SetupScreen`, rakit `WallpaperCard`, dan render di `HomeScreen`. |
+| 01:25 - 01:45 | 20 Menit | Bedah Kode & Mini-Tantangan | Bedah mengapa kode berjalan, uji coba rotasi layar (`rememberSaveable`), dan tweak parameter kartu (`aspectRatio`, `spacedBy`). |
+| 01:45 - 01:55 | 10 Menit | Sesi Tanya Jawab (Q&A) | Buka diskusi mendalam tentang arsitektur Compose, performa rendering, dan tantangan peserta. |
 | 01:55 - 02:00 | 5 Menit | Git Checkpoint & Penutup | Eksekusi commit Sesi 2 ke Git lokal dan preview materi Sesi 3 (Grid & DataStore). |
 
 ---
