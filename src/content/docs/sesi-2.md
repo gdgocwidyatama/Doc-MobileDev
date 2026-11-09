@@ -18,6 +18,126 @@ Seluruh kode yang kamu tulis di bawah ini dipasangkan langsung ke baris komentar
 
 ---
 
+## Pondasi Teori: Thinking in Compose
+
+Sebelum menyentuh baris kode, ada perbedaan mendasar antara cara kerja UI Android tradisional (XML) dengan Jetpack Compose yang wajib dipahami:
+
+### 1. Paradigma UI = f(state)
+Di Jetpack Compose, tampilan antarmuka (UI) bukanlah objek pohon elemen yang kita ubah propertinya secara manual menggunakan perintah imperatif seperti `button.setText()` atau `progressBar.setVisibility()`. Sebaliknya, UI adalah fungsi matematis dari **State**:
+
+$$\text{UI} = f(\text{State})$$
+
+```mermaid
+flowchart LR
+    State["State (Data / Kondisi Saat Ini)"] -->|"Input ke Composable"| Function["f(State)"]
+    Function -->|"Render Visual"| UI["UI di Layar Smartphone"]
+    User["Aksi Pengguna (Klik / Ketik)"] -.->|"Mengubah Nilai (Event)"| State
+```
+
+- **Cara Lama (XML Imperatif)**: Kita bertindak seperti mandor yang memberi instruksi step-by-step: *"Ubah teks tombol jadi 'Mulai', lalu aktifkan tombolnya, lalu sembunyikan loading"*. Jika satu langkah lupa ditulis, UI mengalami bug desinkronisasi.
+- **Cara Baru (Compose Deklaratif)**: Kita cukup mendeskripsikan aturan tampilan untuk setiap kondisi:
+  - *Jika masih di halaman 1 atau 2*: Tampilkan tombol "Lanjut".
+  - *Jika sudah di halaman terakhir*: Tampilkan tombol "Mulai Jelajahi".
+  Sistem Android yang bertanggung jawab menggambar ulang tampilan secara otomatis ketika nilai State berubah.
+
+> **Analogi Sederhana**:
+> XML itu seperti menyuruh tukang mengecat ulang tembok kamar setiap kali kamu ingin ganti warna. Compose itu seperti layar proyektor: proyektor tidak peduli gambarnya apa, ia hanya memancarkan slide yang ada di laptop. Ganti slide di laptop, layar seketika berubah tanpa perlu mengecat apapun.
+
+---
+
+### 2. Siklus Recomposition & Peran `remember`
+- **Recomposition**: Proses ketika Jetpack Compose memanggil ulang fungsi Composable untuk memperbarui tampilan saat State yang dibacanya mengalami perubahan. Compose bekerja cerdas (*intelligent recomposition*): hanya komponen yang membaca data yang berubah yang digambar ulang, sementara komponen statis lainnya tidak disentuh.
+- **Mengapa butuh `remember`?**: Karena fungsi Composable dipanggil berulang kali selama siklus hidup aplikasi, semua variabel lokal biasa di dalamnya akan ter-reset ke nilai awal. Fungsi `remember` bertindak sebagai brankas memori lokal yang menjaga nilai variabel tetap hidup dan tidak hilang selama Composable masih aktif di layar.
+- **`mutableStateOf`**: Membungkus variabel biasa menjadi variabel reaktif yang memiliki "antena". Ketika nilai di dalamnya ditulis ulang, Compose langsung mendeteksi dan menjadwalkan proses recomposition.
+
+---
+
+### 3. State Hoisting & Unidirectional Data Flow (UDF)
+Komponen antarmuka yang baik adalah komponen yang mandiri dan tidak menyimpan state internalnya sendiri (*stateless*):
+- **State flows down**: Data atau kondisi mengalir turun dari komponen induk (*parent*) ke komponen anak (*child*) melalui parameter fungsi.
+- **Events flow up**: Aksi pengguna (ketukan tombol, geseran layar) mengalir naik dari anak ke induk melalui lambda event callback (`onClick`).
+
+```mermaid
+flowchart TD
+    Parent["Parent: SetupScreen (Pemilik State: step)"]
+    Child["Child: SetupBottomBar (Stateless Component)"]
+    Parent -->|"State Down: currentPage, pageCount"| Child
+    Child -->|"Event Up: onNextClicked, onFinishClicked"| Parent
+```
+
+Pada LuminaWalls, `SetupBottomBar` tidak tahu-menahu tentang logika navigasi aplikasi. Ia hanya menerima data nomor halaman (`currentPage`) dari `SetupScreen`, dan melempar event saat tombol ditekan (`onNextClicked`) kembali ke atas. Pola memindahkan kepemilikan state ke komponen induk ini disebut **State Hoisting**.
+
+---
+
+### 4. Mental Model Tata Letak Compose (Stacking Box vs Flow)
+- **`Box` (Z-Axis / Kedalaman Berlapis)**: Menumpuk elemen secara 3 dimensi dari belakang ke depan. Digunakan saat merakit `WallpaperCard`:
+  - **Lapisan 1 (Bawah)**: Foto wallpaper melalui `NetworkImage`.
+  - **Lapisan 2 (Tengah)**: Gradasi hitam transparan (*scrim*) untuk memastikan teks selalu terbaca kontras.
+  - **Lapisan 3 (Atas)**: Teks informasi judul dan nama author.
+
+```mermaid
+flowchart TD
+    L1["Lapisan 1 (Bawah): NetworkImage / Foto Wallpaper"]
+    L2["Lapisan 2 (Tengah): Gradient Scrim (Gradasi Hitam Transparan)"]
+    L3["Lapisan 3 (Atas): Teks Judul & Nama Author"]
+    L1 --- L2 --- L3
+```
+
+- **`Column` (Y-Axis) & `Row` (X-Axis)**:
+  - Menyusun elemen secara linier vertikal atau horizontal.
+  - Pahami perbedaan **`Arrangement`** (mengatur posisi dan jarak di sumbu utama) vs **`Alignment`** (mengatur posisi di sumbu silang). Contohnya `verticalArrangement = Arrangement.Center` memastikan seluruh isi kolom berkumpul tepat di tengah vertikal layar smartphone.
+
+---
+
+## Panduan Instruktur & Speaker Playbook (Sesi 2)
+
+Bagian ini dirancang khusus untuk Instruktur dan Co-Instructor sebagai panduan ritme kelas selama 120 menit:
+
+### 1. Master Rundown 120 Menit Sesi 2
+
+| Waktu | Durasi | Agenda | Fokus Pembahasan & Aktivitas |
+|---|---|---|---|
+| 00:00 - 00:10 | 10 Menit | Pembukaan & Review Sesi 1 | Cek kesiapan perangkat fisik peserta dan review hasil Splash Screen dari Sesi 1. |
+| 00:10 - 00:30 | 20 Menit | Teori: Thinking in Compose | Jelaskan konsep `UI = f(state)`, Recomposition, `remember`, dan State Hoisting. |
+| 00:30 - 01:10 | 40 Menit | Hands-on Bagian 1 (Wizard) | Langkah 1 s/d Langkah 4: Hubungkan `MainActivity`, isi data dummy, buat `SetupBottomBar`, dan selesaikan wizard di `SetupScreen`. |
+| 01:10 - 01:45 | 35 Menit | Hands-on Bagian 2 (Kartu) | Langkah 5 & Langkah 6: Rakit Stacking Card `WallpaperCard` dan render 2 kartu perdana di `HomeScreen`. |
+| 01:45 - 01:55 | 10 Menit | Mini-Tantangan Eksperimen | Peserta mencoba tweak parameter UI (aspek rasio, jarak antar komponen) secara mandiri. |
+| 01:55 - 02:00 | 5 Menit | Git Checkpoint & Penutup | Eksekusi commit Sesi 2 ke Git lokal dan preview materi Sesi 3 (Grid & DataStore). |
+
+---
+
+### 2. Strategi Penyampaian: Fokus "The Why", Bukan Sekadar "The How"
+Karena peserta menggunakan sistem salin-tempel blok kode per TODO dari dokumentasi, peran utamamu adalah membedah alasan di balik tiap baris kode:
+1. **Perlihatkan Masalah Dulu di Layar**: Sebelum menyuruh peserta menempel kode, tunjukkan kondisi aplikasi saat ini di proyektor (misalnya: "Lihat, tombol wizard di bawah belum muncul dan belum bisa diklik").
+2. **Instruksikan Peserta Membuka File & Baris TODO**: Arahkan nama berkas dan baris TODO secara spesifik.
+3. **Bedah Logikanya Begitu Kode Berjalan**:
+   - Tunjukkan bagaimana `AnimatedContent` otomatis memberikan animasi transisi slide horizontal tanpa perlu konfigurasi XML transition yang rumit.
+   - Jelaskan peran `bouncyClickable` di `WallpaperCard` yang memberikan haptic dan efek pegas saat kartu ditekan.
+
+---
+
+### 3. Pertanyaan Pancingan untuk Menghidupkan Kelas
+Gunakan pertanyaan ini untuk menguji pemahaman peserta saat live coding:
+- *"Teman-teman, kira-kira kalau variabel `step` di `SetupScreen` tidak dibungkus `remember`, apa yang terjadi saat layar smartphone kita putar (rotasi horizontal)?"*  
+  *(Jawaban: Nilai step akan reset kembali ke 0 karena Activity dibuat ulang).*
+- *"Mengapa teks author dan judul di WallpaperCard kita beri lapisan hitam transparan (scrim) di bawahnya?"*  
+  *(Jawaban: Supaya teks putih tetap terbaca tajam meskipun gambar wallpapernya berwarna putih terang).*
+
+---
+
+### 4. Mini-Tantangan Cepat (30 Detik)
+Setelah peserta berhasil menampilkan kartu di `HomeScreen`, berikan tantangan santai ini:
+- **Tantangan Rasio Kartu**: "Coba buka `WallpaperCard.kt`, cari baris `.aspectRatio(0.72f)` lalu ganti nilainya menjadi `1f`. Simpan dan jalankan: lihat kartunya sekarang berubah menjadi bujur sangkar!"
+- **Tantangan Jarak Tema**: "Di `SetupScreen.kt`, coba ubah `Arrangement.spacedBy(10.dp)` menjadi `24.dp`. Perhatikan bagaimana jarak antar opsi tema langsung merenggang."
+
+---
+
+### 5. Antisipasi Kendala Teknis Peserta
+- **Error Merah Unresolved Reference**: 90% disebabkan peserta lupa menambahkan import di bagian atas berkas. Ingatkan peserta untuk memeriksa blok import di setiap langkah.
+- **Tampilan Terpotong Status Bar**: Ingatkan peserta bahwa fungsi `enableEdgeToEdge()` di `MainActivity` membuat konten menggambar hingga ke belakang status bar. Karena itu komponen kita membutuhkan modifier `padding` atau penanganan insets sistem.
+
+---
+
 ## Langkah 1: Hubungkan Gerbang Aplikasi di `MainActivity.kt`
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/MainActivity.kt`.
