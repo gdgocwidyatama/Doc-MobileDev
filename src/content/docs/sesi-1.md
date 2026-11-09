@@ -213,58 +213,84 @@ cd luminawalls
 
 Buka folder `luminawalls` tersebut di Android Studio (**File > Open...**), lalu tunggu Gradle menyelesaikan sinkronisasi.
 
-### Memasang Dependensi Splash API Resmi Android
+### Hands-on Template LuminaWalls untuk Sesi 1
 
-Di template LuminaWalls, pustaka `androidx-core-splashscreen` sudah terdaftar rapi di `gradle/libs.versions.toml`. Kamu cukup memanggilnya di modul aplikasi:
+Di template LuminaWalls, pustaka `androidx-core-splashscreen` sudah terdaftar rapi di file inventaris `gradle/libs.versions.toml`. Tugas kita di Sesi 1 adalah mengaktifkan dependensi tersebut dan memasang Splash Screen resmi sistem Android.
 
-#### 1. Pasang di `app/build.gradle.kts`
-Buka berkas `app/build.gradle.kts`, tambahkan di dalam blok `dependencies`:
+Ada tiga berkas yang perlu kita sentuh:
+
+#### Langkah 1: Pasang Dependensi Splash API di `app/build.gradle.kts`
+Buka berkas `app/build.gradle.kts`. Gunakan `Ctrl + F` (atau `Cmd + F` di Mac) untuk mencari baris komentar berikut:
 
 ```kotlin
-dependencies {
-    // Pustaka Splash Screen resmi Android 12+
+    // TODO: [Session 1] Tambahkan dependensi SplashScreen resmi Android di bawah sini:
+```
+
+Tempel baris dependensi berikut tepat di bawah komentar tersebut:
+
+```kotlin
     implementation(libs.androidx.core.splashscreen)
-}
 ```
 
-Klik tombol **Sync Now** di sudut kanan atas editor.
+Setelah itu, klik tombol **Sync Now** yang muncul di sudut kanan atas editor Android Studio dan tunggu proses sinkronisasi Gradle selesai.
 
-#### 2. Pasang di `MainActivity.kt`
-Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/MainActivity.kt`, lalu tambahkan `installSplashScreen()` sebelum `super.onCreate()`:
+> Dependensi ini adalah library resmi dari Google (`androidx.core:core-splashscreen`) agar tampilan splash screen transisi mulus dan konsisten di semua versi Android, dari Android 7 sampai Android 15+.
 
-```kotlin
-package com.gdgoc.luminawalls
+#### Langkah 2: Aktifkan Style Splash Screen di `app/src/main/res/values/themes.xml`
+Buka berkas `app/src/main/res/values/themes.xml`. Kamu akan melihat komentar TODO berikut:
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import com.gdgoc.luminawalls.ui.LuminaMainApp
-
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        val splashScreen = installSplashScreen()
-        super.onCreate(savedInstanceState)
-
-        enableEdgeToEdge()
-
-        setContent {
-            LuminaMainApp()
-        }
-    }
-}
+```xml
+    <!-- TODO: [Session 1] Pasang dependency core-splashscreen di build.gradle.kts, lalu aktifkan style Theme.App.Starting di bawah ini & ganti android:theme di AndroidManifest.xml:
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/gdg_logo</item>
+        <item name="postSplashScreenTheme">@style/Theme.LuminaWalls</item>
+    </style>
+    -->
 ```
 
-Tekan **Run** (`Shift + F10`) untuk memastikan aplikasi LuminaWalls menyala di HP fisikmu.
+Hapus tanda komentar pembuka `<!--` dan penutup `-->` sehingga style `Theme.App.Starting` menjadi aktif seperti ini:
 
-### Simpan Checkpoint Sesi 1 ke GitHub
+```xml
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/gdg_logo</item>
+        <item name="postSplashScreenTheme">@style/Theme.LuminaWalls</item>
+    </style>
+```
+
+> Style ini memberitahu sistem Android untuk menampilkan warna latar cream (`@color/splash_background`) dan logo resmi GDGoC (`@drawable/gdg_logo`) saat aplikasi sedang dimuat ke memori, lalu otomatis berganti ke tema utama (`Theme.LuminaWalls`).
+
+#### Langkah 3: Pasang Style di `app/src/main/AndroidManifest.xml`
+Buka berkas `app/src/main/AndroidManifest.xml`. Cari baris atribut tema pada tag `<application>`:
+
+```xml
+        android:theme="@style/Theme.LuminaWalls">
+        <!-- TODO: [Session 1] Setelah mengaktifkan Theme.App.Starting di themes.xml, ganti android:theme di atas menjadi @style/Theme.App.Starting -->
+```
+
+Ubah nilai atribut `android:theme` di atas komentar tersebut dari `@style/Theme.LuminaWalls` menjadi `@style/Theme.App.Starting`:
+
+```xml
+        android:theme="@style/Theme.App.Starting">
+```
+
+> AndroidManifest adalah berkas identitas aplikasi. Mengarahkan tema aplikasi ke `Theme.App.Starting` memastikan sistem Android langsung menyalakan splash screen sejak milidetik pertama icon aplikasi diketuk oleh pengguna.
+
+#### Langkah 4: Uji Coba Jalankan di HP Fisik
+1. Hubungkan smartphone fisikmu dengan kabel data.
+2. Pastikan nama perangkatmu terpilih di toolbar atas Android Studio.
+3. Klik tombol hijau **Run 'app'** atau tekan shortcut `Shift + F10`.
+4. Perhatikan layar smartphone: splash screen dengan latar cream dan logo GDGoC akan muncul sekejap secara anggun, kemudian langsung masuk ke halaman utama bertuliskan "Hello Android!".
+
+#### Langkah 5: Simpan Checkpoint Sesi 1 ke GitHub
+Buka tab Terminal di Android Studio, lalu jalankan perintah Git berikut:
 
 ```bash
 git status
 git add .
-git commit -m "feat(sesi-1): setup project, run edge-to-edge, and install splash api"
+git commit -m "feat(sesi-1): setup project, physical device run, and splash api"
 git push origin main
 ```
 
-Kini laptop dan perangkatmu sudah 100% siap untuk mulai merakit antarmuka LuminaWalls dari kanvas kosong di **Sesi 2**!
+Kini proyek LuminaWalls di laptop dan smartphonemu sudah 100% siap untuk mulai merakit antarmuka aplikasi dari kanvas kosong di **Sesi 2**!

@@ -1,42 +1,138 @@
 ---
 title: "Sesi 3: Stacking Cards, Settings Theme Switcher & Floating Nav Bar"
-description: "Panduan koding Sesi 3: dependensi DataStore Preferences, grid 2 kolom di HomeScreen, SettingsScreen theme switcher, dan FloatingNavBar."
+description: "Panduan koding hands-on Sesi 3: persistensi DataStore Preferences, galeri 2 kolom LazyVerticalGrid, antarmuka pemilihan tema di SettingsScreen, dan FloatingNavBar modern."
 ---
 
-## Langkah 1: Pasang Dependensi DataStore Preferences
+## Gambaran Umum Sesi 3
 
-Pustaka `androidx-datastore-preferences` sudah tersedia di `gradle/libs.versions.toml`. Buka berkas `app/build.gradle.kts`, lalu panggil di dalam blok `dependencies`:
+Selamat datang di materi koding **Sesi 3**!
+
+Pada sesi ini, kita akan meningkatkan aplikasi **LuminaWalls** dari prototipe awal menjadi aplikasi yang lebih tangguh dan interaktif:
+1. **Persistensi Data**: Mengganti state sementara di memori dengan **Jetpack DataStore Preferences** agar setelan tema dan status wizard tersimpan permanen di perangkat.
+2. **Katalog Galeri Efisien**: Mengubah tata letak galeri di `HomeScreen.kt` dari `Row` menjadi **`LazyVerticalGrid` 2 kolom** yang mendukung scroll cepat dan hemat memori.
+3. **Menu Pengaturan Tema**: Merakit opsi penggantian tema (Sistem, Terang, Gelap) di `SettingsScreen.kt` dengan bentuk sudut adaptif khas Material 3 Expressive.
+4. **Navigasi Melayang**: Memasang `FloatingNavBar` di `LuminaMainApp.kt` dengan animasi muncul dan sembunyi otomatis saat berpindah layar.
+
+Semua langkah di bawah langsung merujuk pada komentar `// TODO: [Session 3]` di berkas proyekmu.
+
+---
+
+## Langkah 1: Pasang Dependensi DataStore Preferences di `app/build.gradle.kts`
+
+Buka berkas `app/build.gradle.kts`.
+
+Gunakan `Ctrl + F` (atau `Cmd + F` di Mac) untuk mencari baris komentar berikut:
 
 ```kotlin
-dependencies {
-    // Penyimpanan data preferensi asinkron (pengganti SharedPreferences)
-    implementation(libs.androidx.datastore.preferences)
-}
+    // TODO: [Session 3] Tambahkan DataStore Preferences untuk simpan setelan tema di bawah sini:
 ```
 
-Klik tombol **Sync Now** di sudut kanan atas editor Android Studio.
+Tempel deklarasi dependensi berikut tepat di bawah komentar tersebut:
+
+```kotlin
+    implementation(libs.androidx.datastore.preferences)
+```
+
+Setelah itu, klik tombol **Sync Now** di sudut kanan atas editor Android Studio dan tunggu hingga proses sinkronisasi Gradle selesai.
+
+> **Kenapa DataStore Preferences?**
+> Di Android modern, Google merekomendasikan `DataStore Preferences` sebagai pengganti resmi dari `SharedPreferences`. DataStore beroperasi secara asinkron menggunakan Kotlin Coroutines dan Flow, sehingga tidak pernah mengunci main thread dan mencegah aplikasi mengalami lag atau ANR (*Application Not Responding*).
 
 ---
 
-## Langkah 2: Grid 2 Kolom di `HomeScreen.kt`
+## Langkah 2: Sambungkan DataStore di `UserPreferencesRepository.kt`
+
+Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/data/repository/UserPreferencesRepository.kt`.
+
+Kita akan mengganti in-memory state dengan membaca dan menulis berkas DataStore lokal:
+
+### 1. Inisialisasi Berkas DataStore
+Tepat di atas deklarasi `class UserPreferencesRepository`, tambahkan baris delegasi berikut:
+
+```kotlin
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "luminawalls_prefs")
+```
+
+### 2. Ganti StateFlow & Fungsi Setter
+Di dalam `class UserPreferencesRepository`, cari baris komentar:
+
+```kotlin
+    // TODO: [Session 3] Ganti in-memory state ini dengan Jetpack DataStore Preferences di bawah sini:
+```
+
+Hapus deklarasi `_isSetupCompleted`, `isSetupCompleted`, `_themeMode`, dan kedua fungsi setter di bawahnya, lalu gantikan dengan implementasi DataStore berikut:
+
+```kotlin
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    val isSetupCompleted: StateFlow<Boolean> = context.dataStore.data
+        .map { preferences -> preferences[KEY_SETUP_COMPLETED] ?: false }
+        .stateIn(
+            scope = scope,
+            started = SharingStarted.Eagerly,
+            initialValue = false,
+        )
+
+    val themeMode: StateFlow<AppThemeMode> = context.dataStore.data
+        .map { preferences ->
+            val modeName = preferences[KEY_THEME_MODE] ?: AppThemeMode.FOLLOW_SYSTEM.name
+            try {
+                AppThemeMode.valueOf(modeName)
+            } catch (_: Exception) {
+                AppThemeMode.FOLLOW_SYSTEM
+            }
+        }
+        .stateIn(
+            scope = scope,
+            started = SharingStarted.Eagerly,
+            initialValue = AppThemeMode.FOLLOW_SYSTEM,
+        )
+
+    fun setSetupCompleted(completed: Boolean) {
+        scope.launch {
+            context.dataStore.edit { preferences ->
+                preferences[KEY_SETUP_COMPLETED] = completed
+            }
+        }
+    }
+
+    fun setThemeMode(mode: AppThemeMode) {
+        scope.launch {
+            context.dataStore.edit { preferences ->
+                preferences[KEY_THEME_MODE] = mode.name
+            }
+        }
+    }
+```
+
+### 3. Daftarkan Kunci Preferensi di `companion object`
+Gulir ke bagian paling bawah berkas pada blok `companion object { ... }`, lalu tambahkan definisi dua kunci berikut:
+
+```kotlin
+        private val KEY_SETUP_COMPLETED = booleanPreferencesKey("setup_completed")
+        private val KEY_THEME_MODE = stringPreferencesKey("theme_mode")
+```
+
+> Kunci preferensi ini bertindak sebagai label kolom data di penyimpanan lokal perangkat. Menggunakan `stateIn` memastikan data preferensi selalu siap dibaca seketika (*read-ready*) saat UI Compose pertama kali dirender.
+
+---
+
+## Langkah 3: Tombol Settings & Galeri 2 Kolom di `HomeScreen.kt`
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/screens/home/HomeScreen.kt`.
 
-Atur grid 2 kolom dengan jarak antar item yang rapi:
+Kita akan melengkapi header dan mengubah tata letak katalog wallpaper:
+
+### 1. Tambahkan Ikon Menu Settings di Header
+Cari baris komentar berikut pada parameter `trailingAction`:
 
 ```kotlin
-@Composable
-fun HomeScreen(
-    wallpapers: List<Wallpaper>,
-    onWallpaperClick: (Wallpaper) -> Unit,
-    onSettingsClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    LuminaScreenScaffold(
-        title = stringResource(R.string.app_name),
-        subtitle = stringResource(R.string.home_subtitle),
-        modifier = modifier,
-        trailingAction = {
+            // TODO: [Session 3] Tulis IconButton untuk membuka layar Pengaturan (onSettingsClick) di bawah sini:
+```
+
+Tempel kode tombol pengaturan berikut:
+
+```kotlin
             IconButton(
                 onClick = onSettingsClick,
                 modifier = Modifier.size(42.dp),
@@ -48,8 +144,18 @@ fun HomeScreen(
                     modifier = Modifier.size(26.dp),
                 )
             }
-        },
-    ) {
+```
+
+### 2. Ubah Menjadi `LazyVerticalGrid` 2 Kolom
+Cari baris komentar berikut:
+
+```kotlin
+        // TODO: [Session 3] Ubah menjadi LazyVerticalGrid 2 kolom di bawah sini:
+```
+
+Hapus blok `if (wallpapers.isNotEmpty()) { Row { ... } }` dari Sesi 2, lalu gantikan dengan grid dinamis berikut:
+
+```kotlin
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
             contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 14.dp, bottom = 100.dp),
@@ -67,136 +173,136 @@ fun HomeScreen(
                 )
             }
         }
-    }
-}
 ```
+
+> **Mengapa `LazyVerticalGrid`?**
+> Komponen `Lazy` hanya merender kartu yang sedang tampak di layar pengguna (*lazy rendering*), sehingga penggunaan RAM tetap sangat rendah meskipun berisi ribuan wallpaper. Padding `bottom = 100.dp` memastikan kartu di baris paling bawah tidak tertutup oleh navigasi bawah (*floating navbar*).
 
 ---
 
-## Langkah 3: Theme Switcher di `SettingsScreen.kt`
+## Langkah 4: Opsi Pemilihan Tema di `SettingsScreen.kt`
 
-Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/screens/settings/SettingsScreen.kt`:
+Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/screens/settings/SettingsScreen.kt`.
+
+Cari baris komentar berikut:
 
 ```kotlin
-@Composable
-fun SettingsScreen(
-    currentThemeMode: AppThemeMode,
-    onThemeModeSelected: (AppThemeMode) -> Unit,
-    onBackClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    LuminaScreenScaffold(
-        title = stringResource(R.string.settings_title),
-        subtitle = stringResource(R.string.settings_subtitle),
-        leadingAction = {
-            FilledIconButton(
-                onClick = onBackClick,
-                shape = CircleShape,
-                colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    contentColor = MaterialTheme.colorScheme.onSurface,
-                ),
-                modifier = Modifier.size(42.dp),
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                    contentDescription = stringResource(R.string.action_back),
-                    modifier = Modifier.size(20.dp),
-                )
-            }
-        },
-        modifier = modifier,
-    ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 22.dp, bottom = 48.dp),
-            verticalArrangement = Arrangement.spacedBy(22.dp),
-        ) {
-            item {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    Text(
-                        text = stringResource(R.string.settings_section_appearance),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(start = 12.dp, bottom = 2.dp),
-                        letterSpacing = 1.2.sp,
+                    // TODO: [Session 3] Tulis opsi pemilihan tema (System, Light, Dark) menggunakan ThemeOptionItem di bawah sini:
+```
+
+Tempel tiga pilihan mode tema berikut tepat di bawah komentar tersebut:
+
+```kotlin
+                    ThemeOptionItem(
+                        title = stringResource(R.string.settings_theme_system),
+                        subtitle = stringResource(R.string.settings_theme_system_desc),
+                        icon = Icons.Rounded.BrightnessAuto,
+                        selected = currentThemeMode == AppThemeMode.FOLLOW_SYSTEM,
+                        onClick = { onThemeModeSelected(AppThemeMode.FOLLOW_SYSTEM) },
+                        shape = itemShapeFor(0, 3),
                     )
 
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(3.dp),
-                    ) {
-                        ThemeOptionItem(
-                            title = stringResource(R.string.settings_theme_system),
-                            subtitle = stringResource(R.string.settings_theme_system_desc),
-                            icon = Icons.Rounded.BrightnessAuto,
-                            selected = currentThemeMode == AppThemeMode.FOLLOW_SYSTEM,
-                            onClick = { onThemeModeSelected(AppThemeMode.FOLLOW_SYSTEM) },
-                            shape = itemShapeFor(0, 3),
-                        )
+                    ThemeOptionItem(
+                        title = stringResource(R.string.settings_theme_light),
+                        subtitle = stringResource(R.string.settings_theme_light_desc),
+                        icon = Icons.Rounded.LightMode,
+                        selected = currentThemeMode == AppThemeMode.LIGHT,
+                        onClick = { onThemeModeSelected(AppThemeMode.LIGHT) },
+                        shape = itemShapeFor(1, 3),
+                    )
 
-                        ThemeOptionItem(
-                            title = stringResource(R.string.settings_theme_light),
-                            subtitle = stringResource(R.string.settings_theme_light_desc),
-                            icon = Icons.Rounded.LightMode,
-                            selected = currentThemeMode == AppThemeMode.LIGHT,
-                            onClick = { onThemeModeSelected(AppThemeMode.LIGHT) },
-                            shape = itemShapeFor(1, 3),
-                        )
-
-                        ThemeOptionItem(
-                            title = stringResource(R.string.settings_theme_dark),
-                            subtitle = stringResource(R.string.settings_theme_dark_desc),
-                            icon = Icons.Rounded.DarkMode,
-                            selected = currentThemeMode == AppThemeMode.DARK,
-                            onClick = { onThemeModeSelected(AppThemeMode.DARK) },
-                            shape = itemShapeFor(2, 3),
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
+                    ThemeOptionItem(
+                        title = stringResource(R.string.settings_theme_dark),
+                        subtitle = stringResource(R.string.settings_theme_dark_desc),
+                        icon = Icons.Rounded.DarkMode,
+                        selected = currentThemeMode == AppThemeMode.DARK,
+                        onClick = { onThemeModeSelected(AppThemeMode.DARK) },
+                        shape = itemShapeFor(2, 3),
+                    )
 ```
+
+> Fungsi `itemShapeFor(index, total)` adalah helper bawaan template yang otomatis membulatkan sudut atas untuk item pertama, sudut bawah untuk item terakhir, dan sudut datar untuk item di tengah, menciptakan daftar pilihan rapi bergaya *Material Expressive Grouped Card*.
 
 ---
 
-## Langkah 4: Pasang `FloatingNavBar` di `LuminaMainApp.kt`
+## Langkah 5: Navigasi Settings & Pasang FloatingNavBar di `LuminaMainApp.kt`
 
-Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/LuminaMainApp.kt`:
+Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/LuminaMainApp.kt`.
+
+Terdapat dua bagian navigasi yang perlu kita lengkapi:
+
+### 1. Buka Layar Settings saat Ikon Diklik
+Cari baris komentar berikut di dalam blok `onSettingsClick = { ... }`:
 
 ```kotlin
-Box(modifier = Modifier.fillMaxSize()) {
-    when (currentTab) {
-        LuminaTab.HOME -> {
-            HomeScreen(
-                wallpapers = wallpapers,
-                onWallpaperClick = { wall -> activeScreen = AppScreen.Preview(wall) },
-                onSettingsClick = { activeScreen = AppScreen.Settings },
-            )
-        }
-        LuminaTab.CONTRIBUTORS -> {
-            ContributorsScreen(contributors = contributors)
-        }
-    }
-
-    FloatingNavBar(
-        selectedTab = currentTab,
-        onTabSelected = { tab -> currentTab = tab },
-        modifier = Modifier.align(Alignment.BottomCenter),
-    )
-}
+                                        // TODO: [Session 3] Navigasikan ke SettingsScreen (AppScreen.Settings) di bawah sini:
 ```
 
-Jalankan ke HP (`Shift + F10`). Klik ikon Settings, pilih salah satu mode tema (Light/Dark/System), lalu amati perubahan warna aplikasi.
+Tempel satu baris navigasi berikut:
+
+```kotlin
+                                        activeScreen = AppScreen.Settings
+```
+
+### 2. Pasang Floating Navigation Bar
+Gulir ke bagian bawah kontainer `Box`, lalu cari komentar:
+
+```kotlin
+                // TODO: [Session 3] Tulis Floating Navigation Bar di bagian bawah untuk navigasi tab Home & Contributors di bawah sini:
+```
+
+Tempel komponen bar navigasi melayang dengan animasi pegas (*spring animation*) berikut:
+
+```kotlin
+                AnimatedVisibility(
+                    visible = activeScreen is AppScreen.MainTab,
+                    enter = slideInVertically(
+                        initialOffsetY = { it },
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessMedium,
+                        )
+                    ) + fadeIn(),
+                    exit = slideOutVertically(
+                        targetOffsetY = { it },
+                        animationSpec = tween(150, easing = EaseInCubic)
+                    ) + fadeOut(),
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                ) {
+                    FloatingNavBar(
+                        selectedTab = currentTab,
+                        onTabSelected = { tab ->
+                            currentTab = tab
+                            activeScreen = AppScreen.MainTab(tab)
+                        },
+                        modifier = Modifier.padding(bottom = 24.dp),
+                    )
+                }
+```
+
+> `FloatingNavBar` didesain melayang anggun di atas galeri wallpaper. Dengan membungkusnya di dalam `AnimatedVisibility`, navbar akan otomatis bersembunyi saat kita membuka layar Settings atau Preview, dan kembali muncul saat kita kembali ke galeri utama.
 
 ---
 
-## Langkah 5: Simpan ke Git & Push
+## Uji Coba Jalankan di HP Fisik
+
+1. Hubungkan smartphone ke laptop dan jalankan aplikasi (`Shift + F10`).
+2. **Uji Coba Penggantian Tema**:
+   - Ketuk ikon **Settings** di kanan atas Home Screen.
+   - Pilih opsi **Gelap (Dark Mode)**: amati seluruh warna latar dan kartu seketika berubah menjadi gelap.
+   - Coba pilih opsi **Terang (Light Mode)** untuk melihat warna cerah.
+3. **Uji Coba Persistensi DataStore**:
+   - Biarkan tema dalam mode Gelap.
+   - Keluar dari aplikasi, lalu tutup paksa aplikasi (*kill app* dari daftar Recent Apps di smartphone kamu).
+   - Buka kembali aplikasi LuminaWalls: perhatikan aplikasi langsung menyala dalam mode Gelap tanpa kembali ke setelan awal!
+4. **Uji Coba Navigasi Tab**:
+   - Ketuk tab **Contributors** pada Floating Navigation Bar di bagian bawah layar untuk melihat animasi perpindahan tab.
+
+---
+
+## Simpan Checkpoint Sesi 3 ke Git
+
+Buka tab Terminal di Android Studio, lalu jalankan:
 
 ```bash
 git status
@@ -204,3 +310,5 @@ git add .
 git commit -m "feat(sesi-3): implement datastore preferences, 2-column grid, theme switcher, and floating nav bar"
 git push origin main
 ```
+
+Luar biasa! Di **Sesi 4**, kita akan menyempurnakan token warna Material 3, menambahkan badge label kategori, dan menghubungkan REST API GitHub untuk memuat daftar kontributor secara live!
