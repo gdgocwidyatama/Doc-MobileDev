@@ -17,6 +17,71 @@ Semua langkah di bawah langsung merujuk pada komentar `// TODO: [Session 3]` di 
 
 ---
 
+## Rangkuman Import Sesi 3
+
+Agar proses koding lancar tanpa terganggu pesan error merah karena class belum diimpor, berikut daftar `import` yang dikelompokkan per berkas untuk Sesi 3:
+
+<details open>
+<summary><b>Daftar Import Sesi 3 per Berkas (Klik untuk Buka/Tutup)</b></summary>
+
+### 1. `UserPreferencesRepository.kt`
+```kotlin
+import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+```
+
+### 2. `HomeScreen.kt`
+```kotlin
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import com.gdgoc.luminawalls.R
+import com.gdgoc.luminawalls.ui.components.WallpaperCard
+```
+
+### 3. `SettingsScreen.kt`
+```kotlin
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.BrightnessAuto
+import androidx.compose.material.icons.rounded.DarkMode
+import androidx.compose.material.icons.rounded.LightMode
+import androidx.compose.ui.res.stringResource
+import com.gdgoc.luminawalls.R
+import com.gdgoc.luminawalls.data.repository.AppThemeMode
+import com.gdgoc.luminawalls.ui.components.itemShapeFor
+```
+
+### 4. `LuminaMainApp.kt`
+> *Catatan*: Seluruh pustaka animasi (`AnimatedVisibility`, `slideInVertically`, dll.) dan komponen `FloatingNavBar` sudah tersedia di berkas awal template.
+
+</details>
+
+---
+
 ## Langkah 1: Pasang Dependensi DataStore Preferences di `app/build.gradle.kts`
 
 Buka berkas `app/build.gradle.kts`.
@@ -44,7 +109,8 @@ Setelah itu, klik tombol **Sync Now** di sudut kanan atas editor Android Studio 
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/data/repository/UserPreferencesRepository.kt`.
 
-Pastikan impor berikut tersedia di bagian atas berkas:
+### 1. Tambahkan Import di Bagian Atas
+Pastikan baris impor berikut tersedia di bagian paling atas berkas:
 
 ```kotlin
 import android.content.Context
@@ -66,14 +132,14 @@ import kotlinx.coroutines.launch
 
 Kita akan mengganti in-memory state dengan membaca dan menulis berkas DataStore lokal:
 
-### 1. Inisialisasi Berkas DataStore
+### 2. Inisialisasi Berkas DataStore
 Tepat di atas deklarasi `class UserPreferencesRepository`, tambahkan baris delegasi berikut:
 
 ```kotlin
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "luminawalls_prefs")
 ```
 
-### 2. Ganti StateFlow & Fungsi Setter
+### 3. Ganti StateFlow & Fungsi Setter
 Di dalam `class UserPreferencesRepository`, cari baris komentar:
 
 ```kotlin
@@ -125,7 +191,7 @@ Hapus deklarasi `_isSetupCompleted`, `isSetupCompleted`, `_themeMode`, dan kedua
     }
 ```
 
-### 3. Daftarkan Kunci Preferensi di `companion object`
+### 4. Daftarkan Kunci Preferensi di `companion object`
 Gulir ke bagian paling bawah berkas pada blok `companion object { ... }`, lalu tambahkan definisi dua kunci berikut:
 
 ```kotlin
@@ -234,7 +300,8 @@ class UserPreferencesRepository private constructor(private val context: Context
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/screens/home/HomeScreen.kt`.
 
-Pastikan impor berikut tersedia di bagian atas berkas:
+### 1. Tambahkan Import di Bagian Atas
+Pastikan baris impor berikut tersedia di bagian paling atas berkas:
 
 ```kotlin
 import androidx.compose.foundation.layout.Arrangement
@@ -257,7 +324,7 @@ import com.gdgoc.luminawalls.ui.components.WallpaperCard
 
 Kita akan melengkapi header dan mengubah tata letak katalog wallpaper:
 
-### 1. Tambahkan Ikon Menu Settings di Header
+### 2. Tambahkan Ikon Menu Settings di Header
 Cari baris komentar berikut pada parameter `trailingAction`:
 
 ```kotlin
@@ -280,7 +347,7 @@ Tempel kode tombol pengaturan berikut:
             }
 ```
 
-### 2. Ubah Menjadi `LazyVerticalGrid` 2 Kolom
+### 3. Ubah Menjadi `LazyVerticalGrid` 2 Kolom
 Cari baris komentar berikut:
 
 ```kotlin
@@ -318,7 +385,8 @@ Hapus blok `if (wallpapers.isNotEmpty()) { Row { ... } }` dari Sesi 2, lalu gant
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/screens/settings/SettingsScreen.kt`.
 
-Pastikan impor berikut sudah tersedia di bagian atas berkas:
+### 1. Tambahkan Import di Bagian Atas
+Pastikan baris impor berikut sudah tersedia di bagian paling atas berkas:
 
 ```kotlin
 import androidx.compose.material.icons.Icons
@@ -331,6 +399,7 @@ import com.gdgoc.luminawalls.data.repository.AppThemeMode
 import com.gdgoc.luminawalls.ui.components.itemShapeFor
 ```
 
+### 2. Tulis Opsi Pemilihan Tema
 Cari baris komentar berikut:
 
 ```kotlin
@@ -376,23 +445,7 @@ Tempel tiga pilihan mode tema berikut tepat di bawah komentar tersebut:
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/LuminaMainApp.kt`.
 
-Pastikan impor animasi dan navigasi berikut sudah tersedia di bagian atas:
-
-```kotlin
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.EaseInCubic
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.layout.padding
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.unit.dp
-import com.gdgoc.luminawalls.ui.components.FloatingNavBar
-```
+> **Catatan Import**: Seluruh pustaka animasi (`AnimatedVisibility`, `slideInVertically`, `spring`, dll.) serta komponen `FloatingNavBar` sudah diimpor secara lengkap di bagian atas berkas `LuminaMainApp.kt`. Kamu bisa langsung lanjut melengkapi kode navigasi di bawah.
 
 Terdapat dua bagian navigasi yang perlu kita lengkapi:
 

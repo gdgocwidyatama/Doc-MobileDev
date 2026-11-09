@@ -18,21 +18,81 @@ Seluruh kode yang kamu tulis di bawah ini dipasangkan langsung ke baris komentar
 
 ---
 
+## Rangkuman Import Sesi 4
+
+Agar proses koding lancar tanpa terganggu pesan error merah karena class belum diimpor, berikut daftar `import` yang dikelompokkan per berkas untuk Sesi 4:
+
+<details open>
+<summary><b>Daftar Import Sesi 4 per Berkas (Klik untuk Buka/Tutup)</b></summary>
+
+### 1. `WallpaperCard.kt`
+```kotlin
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+```
+
+### 2. `PreviewScreen.kt`
+```kotlin
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.res.stringResource
+import com.gdgoc.luminawalls.R
+```
+
+### 3. `SettingsScreen.kt`
+```kotlin
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.res.stringResource
+import com.gdgoc.luminawalls.R
+```
+
+### 4. `LuminaMainApp.kt`
+> *Catatan*: Navigasi `AppScreen.Preview(wall)` tidak memerlukan import baru, model dan sealed class sudah tersedia di berkas ini.
+
+### 5. `ContributorRepository.kt`
+```kotlin
+import java.net.HttpURLConnection
+import java.net.URL
+import org.json.JSONArray
+```
+
+### 6. `ContributorsScreen.kt`
+> *Catatan*: Seluruh komponen pendukung (`LuminaHeroCard`, `GdgocTeamBlock`, `ContributorsBlock`, dll.) sudah tersedia di dalam berkas template.
+
+</details>
+
+---
+
 ## Langkah 1: Tambahkan Chip Tag Kategori di `WallpaperCard.kt`
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/components/WallpaperCard.kt`.
 
-Pastikan impor berikut sudah tersedia di bagian atas berkas:
+### 1. Tambahkan Import di Bagian Atas
+Pastikan baris impor berikut sudah tersedia di bagian paling atas berkas:
 
 ```kotlin
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 ```
 
 Pada berkas ini terdapat dua hal yang kita lengkapi:
 
-### 1. Isi Badan Fungsi `WallpaperTag`
+### 2. Isi Badan Fungsi `WallpaperTag`
 Di bagian atas berkas, fungsi `WallpaperTag` sudah disiapkan oleh template. Cari baris komentar:
 
 ```kotlin
@@ -143,6 +203,20 @@ Tempel komponen tombol kembali berikut tepat di bawahnya:
 ### 2. Pasang di `SettingsScreen.kt`
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/screens/settings/SettingsScreen.kt`.
 
+Pastikan baris impor berikut sudah tersedia di bagian paling atas berkas:
+
+```kotlin
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.res.stringResource
+import com.gdgoc.luminawalls.R
+```
+
 Cari baris komentar yang sama pada parameter `leadingAction`:
 
 ```kotlin
@@ -158,6 +232,8 @@ Tempel tombol kembali yang sama persis seperti di atas.
 ## Langkah 3: Buka Layar Pratinjau di `LuminaMainApp.kt`
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/LuminaMainApp.kt`.
+
+> **Catatan Import**: Navigasi `AppScreen.Preview(wall)` tidak memerlukan impor baru. Class `AppScreen` dan objek pratinjau sudah tersedia di dalam berkas ini.
 
 Cari baris komentar berikut di dalam blok `onWallpaperClick = { wall -> ... }`:
 
@@ -179,7 +255,8 @@ Tempel satu baris navigasi berikut:
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/data/repository/ContributorRepository.kt`.
 
-Pastikan impor koneksi jaringan dan JSON berikut sudah ada di bagian atas berkas:
+### 1. Tambahkan Import di Bagian Atas
+Pastikan baris impor koneksi jaringan dan JSON berikut sudah ada di bagian paling atas berkas:
 
 ```kotlin
 import java.net.HttpURLConnection
@@ -189,7 +266,7 @@ import org.json.JSONArray
 
 Kita akan melengkapi dua slot pada repositori ini:
 
-### 1. Tentukan URL Repositori Proyek
+### 2. Tentukan URL Repositori Proyek
 Cari baris komentar berikut:
 
 ```kotlin
@@ -202,7 +279,7 @@ Pastikan konstanta URL repositori mengarah ke repositori proyek:
     const val DEFAULT_REPO_URL = "https://github.com/gdgocwidyatama/MobileDev"
 ```
 
-### 2. Eksekusi REST API Publik GitHub
+### 3. Eksekusi REST API Publik GitHub
 Cari baris komentar berikut di dalam fungsi `fetchFromGitHub`:
 
 ```kotlin
@@ -257,6 +334,8 @@ Hapus baris `emptyList()` bawaan di bawahnya, lalu gantikan dengan logika koneks
 ## Langkah 5: Bangun Tampilan Layar di `ContributorsScreen.kt`
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/screens/contributors/ContributorsScreen.kt`.
+
+> **Catatan Import**: Seluruh komponen pendukung (`LuminaHeroCard`, `GdgocTeamBlock`, `ContributorsBlock`, `LuminaListItem`, `NetworkImage`, `SectionHeader`, dll.) sudah diimpor secara lengkap di bagian atas berkas `ContributorsScreen.kt`.
 
 Kita akan melengkapi tata letak konten dan daftar kontributor:
 

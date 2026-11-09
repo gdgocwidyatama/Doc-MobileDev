@@ -20,6 +20,50 @@ Semua langkah di bawah merujuk langsung pada baris komentar `// TODO: [Session 5
 
 ---
 
+## Rangkuman Import Sesi 5
+
+Agar proses koding lancar tanpa terganggu pesan error merah karena class belum diimpor, berikut daftar `import` yang dikelompokkan per berkas untuk Sesi 5:
+
+<details open>
+<summary><b>Daftar Import Sesi 5 per Berkas (Klik untuk Buka/Tutup)</b></summary>
+
+### 1. `WallpaperRepository.kt`
+```kotlin
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONObject
+import java.util.concurrent.TimeUnit
+```
+
+### 2. `NetworkImage.kt`
+```kotlin
+import androidx.compose.ui.platform.LocalContext
+import coil.compose.SubcomposeAsyncImage
+import coil.request.ImageRequest
+import com.gdgoc.luminawalls.data.image.ImageCacheManager
+```
+
+### 3. `PreviewScreen.kt`
+```kotlin
+import android.app.WallpaperManager
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.sp
+import com.gdgoc.luminawalls.R
+```
+
+</details>
+
+---
+
 ## Langkah 1: Pasang Dependensi OkHttp & Coil di `app/build.gradle.kts`
 
 Buka berkas `app/build.gradle.kts`.
@@ -69,9 +113,19 @@ Pastikan kedua izin sistem berikut sudah terpasang:
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/data/repository/WallpaperRepository.kt`.
 
+### 1. Tambahkan Import di Bagian Atas
+Pastikan baris impor koneksi jaringan dan JSON berikut sudah ada di bagian paling atas berkas:
+
+```kotlin
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONObject
+import java.util.concurrent.TimeUnit
+```
+
 Kita akan melengkapi tiga bagian untuk mengaktifkan pengambilan data dari server Cloudflare:
 
-### 1. Panggil `loadWallpapers()` saat Aplikasi Menyala
+### 2. Panggil `loadWallpapers()` saat Aplikasi Menyala
 Cari komentar di dalam blok `init { ... }`:
 
 ```kotlin
@@ -84,7 +138,7 @@ Tempel pemanggilan fungsi pemuatan data berikut:
         loadWallpapers()
 ```
 
-### 2. Eksekusi HTTP Request ke Cloudflare Workers
+### 3. Eksekusi HTTP Request ke Cloudflare Workers
 Cari baris komentar berikut di dalam fungsi `fetchWallpapersFromApi`:
 
 ```kotlin
@@ -128,7 +182,7 @@ Hapus baris `emptyList()` di bawahnya, lalu gantikan dengan logika koneksi jarin
         }
 ```
 
-### 3. Perbarui Nilai State Wallpaper
+### 4. Perbarui Nilai State Wallpaper
 Gulir ke fungsi `loadWallpapers(category: String? = null)`, lalu cari komentar:
 
 ```kotlin
@@ -303,7 +357,8 @@ object WallpaperRepository {
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/components/NetworkImage.kt`.
 
-Pastikan impor Coil berikut sudah tersedia di bagian atas:
+### 1. Tambahkan Import di Bagian Atas
+Pastikan baris impor Coil berikut sudah tersedia di bagian paling atas berkas:
 
 ```kotlin
 import androidx.compose.ui.platform.LocalContext
@@ -312,6 +367,7 @@ import coil.request.ImageRequest
 import com.gdgoc.luminawalls.data.image.ImageCacheManager
 ```
 
+### 2. Pasang Komponen `SubcomposeAsyncImage`
 Cari baris komentar berikut di dalam fungsi `NetworkImage`:
 
 ```kotlin
@@ -508,7 +564,8 @@ fun NetworkImage(
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/screens/preview/PreviewScreen.kt`.
 
-Pastikan impor berikut sudah ada di bagian atas:
+### 1. Tambahkan Import di Bagian Atas
+Pastikan baris impor berikut sudah ada di bagian paling atas berkas:
 
 ```kotlin
 import android.app.WallpaperManager
@@ -528,7 +585,7 @@ import com.gdgoc.luminawalls.R
 
 Kita akan melengkapi tombol pemicu dan eksekusi penggantian wallpaper sistem:
 
-### 1. Tombol "Terapkan Wallpaper"
+### 2. Tombol "Terapkan Wallpaper"
 Cari baris komentar berikut:
 
 ```kotlin
@@ -582,7 +639,7 @@ Tempel komponen tombol Material 3 berikut:
             }
 ```
 
-### 2. Eksekusi Native Android `WallpaperManager`
+### 3. Eksekusi Native Android `WallpaperManager`
 Gulir ke bawah pada fungsi coroutine penggantian wallpaper, lalu cari baris komentar:
 
 ```kotlin

@@ -18,10 +18,85 @@ Seluruh kode yang kamu tulis di bawah ini dipasangkan langsung ke baris komentar
 
 ---
 
+## Rangkuman Import Sesi 2
+
+Agar proses koding lancar tanpa terganggu pesan error merah karena class belum diimpor, berikut daftar `import` yang dikelompokkan per berkas untuk Sesi 2. Kamu bisa menyalin seluruh blok import ini ke bagian atas masing-masing berkas:
+
+<details open>
+<summary><b>Daftar Import Sesi 2 per Berkas (Klik untuk Buka/Tutup)</b></summary>
+
+### 1. `MainActivity.kt`
+```kotlin
+import com.gdgoc.luminawalls.ui.LuminaMainApp
+```
+
+### 2. `WallpaperRepository.kt`
+> *Catatan*: Berkas ini tidak membutuhkan import tambahan baru untuk Sesi 2.
+
+### 3. `SetupComponents.kt`
+```kotlin
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.res.stringResource
+import com.gdgoc.luminawalls.R
+```
+
+### 4. `SetupScreen.kt`
+```kotlin
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.res.stringResource
+import com.gdgoc.luminawalls.R
+import com.gdgoc.luminawalls.ui.components.LuminaListItem
+import com.gdgoc.luminawalls.ui.components.SetupBottomBar
+import com.gdgoc.luminawalls.ui.components.SetupHeader
+```
+
+### 5. `WallpaperCard.kt`
+```kotlin
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+```
+
+### 6. `HomeScreen.kt`
+```kotlin
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
+import com.gdgoc.luminawalls.ui.components.WallpaperCard
+```
+
+</details>
+
+---
+
 ## Langkah 1: Hubungkan Gerbang Aplikasi di `MainActivity.kt`
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/MainActivity.kt`.
 
+### 1. Tambahkan Import di Bagian Atas
+Pastikan berkas mengimpor komponen orkestrator di baris import paling atas:
+
+```kotlin
+import com.gdgoc.luminawalls.ui.LuminaMainApp
+```
+
+### 2. Ganti Konten Starter dengan Orkestrator
 Gunakan `Ctrl + F` (atau `Cmd + F` di Mac) untuk mencari baris komentar berikut:
 
 ```kotlin
@@ -43,14 +118,6 @@ Sehingga blok `setContent` di `MainActivity.kt` menjadi bersih dan ringkas seper
         }
 ```
 
-Pastikan berkas mengimpor komponen orkestrator di baris import paling atas:
-
-```kotlin
-import com.gdgoc.luminawalls.ui.LuminaMainApp
-```
-
-> **Tips Pemula**: Jika teks `LuminaMainApp` berwarna merah di Android Studio, letakkan kursor pada teks tersebut lalu tekan tombol `Alt + Enter` (atau `Option + Return` di Mac), lalu pilih **Import class**.
->
 > `LuminaMainApp()` bertindak sebagai nahkoda utama aplikasi. Di dalamnya sudah disiapkan gerbang state: jika pengguna baru pertama kali membuka aplikasi, sistem otomatis menampilkan `SetupScreen`. Jika proses onboarding sudah pernah diselesaikan, aplikasi langsung mengarahkan pengguna ke halaman utama `HomeScreen`.
 
 ---
@@ -87,6 +154,8 @@ Tepat di bawah baris komentar tersebut, ubah deklarasi `private val initialWallp
 ```
 
 > Sebelum kita menghubungkan aplikasi ke REST API Cloudflare di Sesi 5, kita menyediakan dua data dummy lokal ini agar kanvas galeri tidak kosong dan kartu wallpaper bisa langsung kita uji coba di layar smartphone.
+>
+> **Catatan Import**: Berkas `WallpaperRepository.kt` pada langkah ini tidak memerlukan impor tambahan karena model `Wallpaper` sudah berada dalam package data yang sama.
 
 ---
 
@@ -94,7 +163,8 @@ Tepat di bawah baris komentar tersebut, ubah deklarasi `private val initialWallp
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/components/SetupComponents.kt`.
 
-Pastikan impor berikut sudah tersedia di bagian atas berkas:
+### 1. Tambahkan Import di Bagian Atas
+Pastikan impor berikut sudah tersedia di bagian paling atas berkas:
 
 ```kotlin
 import androidx.compose.foundation.layout.width
@@ -102,6 +172,7 @@ import androidx.compose.ui.res.stringResource
 import com.gdgoc.luminawalls.R
 ```
 
+### 2. Pasang Tombol Navigasi Dinamis
 Cari baris komentar berikut di dalam fungsi `SetupBottomBar`:
 
 ```kotlin
@@ -144,7 +215,8 @@ Tempel kode tombol Material 3 berikut tepat di bawah komentar tersebut:
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/setup/SetupScreen.kt`.
 
-Pastikan impor berikut sudah ada di bagian atas berkas:
+### 1. Tambahkan Import di Bagian Atas
+Pastikan baris impor berikut sudah ada di bagian paling atas berkas:
 
 ```kotlin
 import androidx.compose.foundation.layout.Spacer
@@ -160,7 +232,7 @@ import com.gdgoc.luminawalls.ui.components.SetupHeader
 
 Di berkas ini terdapat empat slot TODO yang perlu kita isi secara berurutan:
 
-### 1. Pasang Bottom Bar Wizard di `SetupScreen`
+### 2. Pasang Bottom Bar Wizard di `SetupScreen`
 Cari komentar di dalam parameter `bottomBar = { ... }`:
 
 ```kotlin
@@ -180,7 +252,7 @@ Tempel pemanggilan komponen bar bawah berikut tepat di bawahnya:
             )
 ```
 
-### 2. Header Sambutan Langkah 1 di `WelcomeStep()`
+### 3. Header Sambutan Langkah 1 di `WelcomeStep()`
 Gulir ke fungsi `WelcomeStep()`, lalu cari komentar:
 
 ```kotlin
@@ -196,7 +268,7 @@ Tempel pemanggilan header pembuka berikut:
         )
 ```
 
-### 3. Header & Opsi Tema Langkah 2 di `PersonalizationStep()`
+### 4. Header & Opsi Tema Langkah 2 di `PersonalizationStep()`
 Gulir ke fungsi `PersonalizationStep()`, lalu cari komentar:
 
 ```kotlin
@@ -237,7 +309,7 @@ Tempel daftar pilihan tema menggunakan `LuminaListItem`:
         }
 ```
 
-### 4. Header Penutup Langkah 3 di `DoneStep()`
+### 5. Header Penutup Langkah 3 di `DoneStep()`
 Gulir ke fungsi `DoneStep()`, lalu cari komentar:
 
 ```kotlin
@@ -261,7 +333,8 @@ Tempel header penutup berikut:
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/components/WallpaperCard.kt`.
 
-Pastikan impor berikut sudah tersedia di bagian atas:
+### 1. Tambahkan Import di Bagian Atas
+Pastikan baris impor berikut sudah tersedia di bagian paling atas berkas:
 
 ```kotlin
 import androidx.compose.foundation.background
@@ -280,6 +353,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 ```
 
+### 2. Rakit Stacking Card Berlapis
 Cari baris komentar berikut di dalam fungsi `WallpaperCard`:
 
 ```kotlin
@@ -356,7 +430,8 @@ Tempel implementasi kartu berlapis (*Stacking Card*) berikut tepat di bawahnya:
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/screens/home/HomeScreen.kt`.
 
-Pastikan impor berikut sudah tersedia:
+### 1. Tambahkan Import di Bagian Atas
+Pastikan baris impor berikut sudah tersedia di bagian paling atas berkas:
 
 ```kotlin
 import androidx.compose.foundation.layout.Arrangement
@@ -367,6 +442,7 @@ import androidx.compose.ui.unit.dp
 import com.gdgoc.luminawalls.ui.components.WallpaperCard
 ```
 
+### 2. Tampilkan Kartu Berdampingan
 Cari baris komentar berikut:
 
 ```kotlin
