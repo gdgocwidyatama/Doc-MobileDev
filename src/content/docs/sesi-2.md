@@ -88,7 +88,7 @@ flowchart LR
    - Setelah ukuran dan koordinat piksel (X, Y, Lebar, Tinggi) diketahui pasti, Android melukis elemen tersebut ke kanvas layar menggunakan akselerasi grafis GPU hardware.
 
 > **Tips Performa Kelas Dunia**:
-> Jika kita mengubah animasi warna atau rotasi, usahakan membacanya di fase Draw (misalnya menggunakan lambda modifier `Modifier.drawBehind { ... }` atau `Modifier.graphicsLayer { ... }`). Dengan begitu, Fase 1 (Composition) dan Fase 2 (Layout) dilewati sepenuhnya, sehingga animasi berjalan stabil di 120 FPS tanpa membebani CPU!
+> Jika kita mengubah animasi warna atau rotasi, usahakan membacanya di fase Draw (misalnya menggunakan lambda modifier `Modifier.drawBehind { ... }` atau `Modifier.graphicsLayer { ... }`). Dengan begitu, Fase 1 (Composition) dan Fase 2 (Layout) dilewati sepenuhnya, sehingga animasi tetap mulus bebas patah-patah (*zero jank*) dan hemat baterai tanpa membebani CPU!
 
 ---
 
@@ -251,7 +251,7 @@ AnimatedContent(
 }
 ```
 
-Compose secara otomatis menghitung interpolasi pergerakan piksel di setiap frame layar (60 Hz sampai 120 Hz) menggunakan kurva pegas (*spring physics*) yang sangat halus dan tahan terhadap interupsi klik pengguna.
+Compose secara otomatis menghitung interpolasi pergerakan piksel secara real-time menggunakan kurva pegas (*spring physics*) yang sangat halus, bebas lag, dan tahan terhadap interupsi klik pengguna.
 
 ---
 
