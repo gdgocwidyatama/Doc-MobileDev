@@ -14,6 +14,132 @@ Di sesi ini, kita melanjutkan proyek LuminaWalls dari Sesi 2 untuk menambahkan b
 
 Cari komentar `// TODO: [Session 3]` di tiap berkas untuk menemukan lokasi kode yang perlu diisi.
 
+```mermaid
+flowchart TD
+    subgraph Teori ["Teori Sesi 3"]
+        T1["Pixel, dp & sp<br/>(Layar & Ukuran)"]
+        T2["Thread, Main Thread & Blocking<br/>(Mencegah ANR)"]
+        T3["Kotlin Coroutines & Dispatchers<br/>(Non-Blocking I/O)"]
+        T4["Local Persistence<br/>(Jetpack DataStore)"]
+        T5["Kotlin Flow & StateFlow<br/>(Aliran Data Reaktif)"]
+    end
+
+    subgraph Praktek ["Praktek Sesi 3"]
+        P1["Settings Screen<br/>(Monet Theme Switcher)"]
+        P2["Navigation Screen<br/>(Floating Navigation Bar)"]
+        P3["Menyimpan Status Setup Screen<br/>(Persistensi Onboarding)"]
+    end
+
+    T1 --> T2 --> T3 --> T4 --> T5
+    T5 --> P1 --> P2 --> P3
+```
+
+---
+
+## Teori & Konsep Fundamental Sesi 3
+
+Sebelum masuk ke baris kode, kita pelajari 6 fondasi arsitektur yang menjadi alasan di balik kode yang kita tulis hari ini.
+
+### 1. Fondasi Layar: `px` vs `dp` vs `sp`
+
+* **Masalah Pixel Fisik (`px`):** Layar smartphone memiliki kerapatan pixel (*density*) yang berbeda-beda. Tombol berukuran `100px` akan tampak normal di layar resolusi rendah, tetapi menyusut drastis di layar flagship resolusi tinggi.
+* **Solusi `dp` (Density-Independent Pixel):** Satuan virtual berbasis baseline 160 dpi. Menggunakan `dp` memastikan ukuran fisik elemen UI tetap seragam (~9mm untuk tombol 48dp) di semua jenis perangkat.
+* **Skala Teks `sp` (Scale-Independent Pixel):** Mirip `dp`, tetapi nilainya otomatis menyesuaikan setelan *Font Size* aksesibilitas di sistem Android (misal bagi pengguna lansia).
+* **Aturan Emas:** Gunakan `dp` untuk wadah, padding, margin, dan ikon. Gunakan `sp` secara eksklusif untuk seluruh hierarki teks.
+
+```mermaid
+flowchart LR
+    Dev["Developer Tulis Ukuran<br/>(dp / sp)"] --> OS["OS Cek Kerapatan Layar<br/>(mdpi .. xxxhdpi)"]
+    OS --> Calc["Hitung Pixel Fisik:<br/>px = dp * (dpi / 160)"]
+    Calc --> Render["GPU Gambar ke Pixel Fisik Layar"]
+```
+
+---
+
+### 2. Threading: Main Thread Budget, Blocking, & Coroutines
+
+* **Analogi Kasir Restoran:** Main Thread adalah **Kasir**, sedangkan Worker Thread adalah **Koki di Dapur**. Tugas kasir hanya melayani antrean pesanan dan menggambar tampilan monitor.
+* **Apa itu Blocking I/O?** Jika kasir disuruh memasak daging sendiri di meja kasir (misal: membaca file disk besar atau memanggil jaringan internet secara sinkron), antrean pelanggan macet total.
+* **Jalur Bebas Hambatan & Bahaya ANR:** Main Thread bertugas menggambar UI dan merespons sentuhan jari secara instan. Jika Main Thread terblokir proses berat selama 5 detik tanpa merespons sentuhan, sistem Android memunculkan dialog **ANR (Application Not Responding)** untuk menutup paksa aplikasi.
+* **Solusi Non-Blocking via Coroutines:** Main Thread melempar tugas I/O ke dapur lewat `Dispatchers.IO`. Main Thread tetap bebas menggambar frame layar tanpa lag.
+
+```mermaid
+flowchart TD
+    Touch["Sentuhan Jari Pengguna"] --> Main["Kasir (Main Thread)"]
+    Main -->|"Lempar Tiket Tugas I/O"| Worker["Koki di Dapur (Dispatchers.IO)"]
+    Main -->|"Tetap Bebas & Responsif"| UI["UI Animasi 60-120 FPS"]
+    Worker -->|"Baca Disk / Tulis File"| Disk["Penyimpanan Data"]
+    Disk -->|"Hasil Selesai"| UI
+```
+
+---
+
+### 3. Persistensi Data: SharedPreferences vs Jetpack DataStore vs Room
+
+* **Dua Lokasi Folder (Root vs External):** Folder yang sering kita lihat di File Manager (`/sdcard/Android/data/`) itu cuma penyimpanan bersama / symlink untuk file unduhan besar. Rumah asli DataStore dan database tersimpan di partisi root privat (`/data/data/<package_name>/`) yang terkunci rapat dan tidak bisa dibuka aplikasi lain tanpa hak akses root.
+* **Kelemahan SharedPreferences:** Menyimpan data dalam format teks XML lama. Membaca data memblokir Main Thread, dan operasi tulis rawan korup jika aplikasi mendadak crash.
+* **Keunggulan Jetpack DataStore:** Dibangun murni di atas Kotlin Coroutines dan Flow. Menggunakan format biner `.preferences_pb` yang ringkas, berjalan asinkron di `Dispatchers.IO`, dan memiliki jaminan transaksi atomik (ACID).
+* **Kapan Pakai Room?** Room (SQLite) ditujukan untuk data relasional kompleks ratusan baris. Untuk menyimpan preferensi sederhana (tema, token, filter), DataStore adalah pilihan yang jauh lebih ringan dan cepat.
+
+```mermaid
+flowchart LR
+    Req["Aplikasi Minta / Simpan Data"] --> IO["Dispatchers.IO<br/>(Background Thread)"]
+    IO -->|"Operasi Baca"| Read["Baca Biner .preferences_pb"]
+    Read -->|"Pancarkan Otomatis"| Stream["Flow Data ke Compose"]
+    IO -->|"Operasi Tulis"| Acid["Transaksi Atomik ACID<br/>(Aman dari Crash)"]
+```
+
+---
+
+### 4. Aliran Reaktif: Cold Flow ke Hot StateFlow & Lifecycle
+
+* **Cold Flow (Keran Air Pasif):** DataStore memancarkan data secara pasif. Air baru mengalir saat keran dibuka (`collect`). Aliran otomatis berhenti saat tidak ada yang mendengar.
+* **Hot StateFlow (Ember di Meja Kasir):** ViewModel menyimpan nilai mutakhir di memori. Kapan pun layar Compose dibuka, datanya langsung tersedia seketika tanpa layar berkedip kosong (*zero-flicker*).
+* **Jembatan `.stateIn()`:** Mengubah Cold Flow dari DataStore menjadi Hot StateFlow di ViewModel dengan nilai awal (*initialValue*).
+* **Lifecycle Awareness di Compose:** Memakai `collectAsStateWithLifecycle()` di layar memastikan aliran data otomatis dijeda saat aplikasi diminimalkan ke background, menghemat daya baterai ponsel.
+
+```mermaid
+flowchart TD
+    DS["DataStore di Disk"] -->|"Cold Flow (Keran Pasif)"| SI[".stateIn()"]
+    SI -->|"Hot StateFlow (Ember ViewModel)"| VM["ViewModel"]
+    VM -->|"collectAsStateWithLifecycle()"| LC{"Status Layar"}
+    LC -->|"Layar Aktif (Foreground)"| UI["Recompose UI Mulus"]
+    LC -->|"Layar Diminimalkan (Background)"| Idle["Aliran Dijeda (Hemat Baterai)"]
+```
+
+---
+
+### 5. Virtualisasi Tampilan: `Column` vs `LazyVerticalGrid`
+
+* **Jebakan `Column` Biasa (Meja Jebol):** Membuat 500 kartu di `Column` memaksa Android merakit dan menaruh 500 node UI sekaligus ke RAM. Akibatnya memori jebol (*Out Of Memory Crash*).
+* **Solusi Virtualisasi `LazyVerticalGrid` (Conveyor Belt Sushi):** Sistem hanya membuat 6–8 kartu yang tampak di dalam viewport layar. Saat kartu keluar dari layar, slot memorinya langsung didaur ulang untuk kartu baru yang masuk dari bawah.
+* **Kunci Performa:** Wajib menggunakan `key = { it.id }` dan `contentType = { "card" }` agar Compose tidak mengulang komposisi dari awal saat urutan kartu bergeser.
+
+```mermaid
+flowchart TD
+    DB["Katalog Wallpaper (Ratusan Gambar)"] --> VP["Viewport Layar<br/>(Hanya 6-8 Kartu Aktif)"]
+    VP -->|"Pengguna Menggulir Layar"| Recycle["Daur Ulang Slot Memori<br/>(Kartu Keluar Layar)"]
+    Recycle -->|"Dipakai Langsung Tanpa Alokasi Baru"| NextCard["Kartu Baru Masuk Layar"]
+```
+
+---
+
+### 6. Desain Ergonomi: Tonal Elevation M3 & Natural Thumb Zone
+
+* **Tonal Elevation vs Drop Shadow:** Di Material 2, efek kedalaman dibuat dengan bayangan hitam pekat (*drop shadow*) yang tidak terlihat di Dark Mode. Di Material 3, kartu yang lebih tinggi diberi tint warna primer yang lebih terang (*Tonal Elevation*), tetap jelas di tema terang maupun gelap.
+* **The Natural Thumb Zone:** Lebih dari 75% orang menggunakan ponsel 6.7 inci dengan satu tangan. Menaruh navigasi filter di atas layar menyiksa jempol. Meletakkannya di `FloatingNavBar` melayang di bawah layar menempatkan kontrol tepat di zona alami jangkauan jempol.
+
+```mermaid
+flowchart TD
+    subgraph LayarPonsel ["Zona Jangkauan Layar Smartphone"]
+        direction TB
+        Top["Area Atas (Sulit Dijangkau)<br/>Judul & Status Bar (Konten Pasif)"]
+        Mid["Area Tengah (Jangkauan Sedang)<br/>Galeri Wallpaper & Konten Bacaan"]
+        Bottom["Natural Thumb Zone (Sangat Nyaman)<br/>Floating Navigation Bar (Aksi & Filter)"]
+    end
+    Top --- Mid --- Bottom
+```
+
 ---
 
 ## Langkah 1: Tambahkan Dependensi DataStore Preferences
