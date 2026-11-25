@@ -564,6 +564,15 @@ Kita memasang tombol kembali bulat Material 3 (`FilledIconButton`) dengan ikon p
 
 ### 2.1 Pasang di `SettingsScreen.kt`
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/screens/settings/SettingsScreen.kt`.  
+Pastikan import berikut sudah ada di bagian atas file:
+
+```kotlin title="ui/screens/settings/SettingsScreen.kt"
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.IconButtonDefaults
+```
+
 Cari parameter `leadingAction` pada `LuminaScreenScaffold`:
 
 ```kotlin title="ui/screens/settings/SettingsScreen.kt"
