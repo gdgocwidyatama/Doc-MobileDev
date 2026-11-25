@@ -818,7 +818,60 @@ private fun resolveApiUrl(target: String): String {
 
 ---
 
-## Langkah 6: Pengujian Aplikasi di Smartphone Fisik & Commit Git
+## Langkah 6: Aktifkan Coil untuk Foto Avatar di `NetworkImage.kt`
+
+Agar foto profil instruktur dan avatar kontributor GitHub tampil di layar, kita pasang dependensi **Coil** sekarang (nanti di Sesi 5 tinggal ditambahkan OkHttp custom DNS untuk gambar wallpaper).
+
+### 6.1 Tambahkan Dependensi Coil di `app/build.gradle.kts`
+Buka berkas `app/build.gradle.kts`, tambahkan `coil-compose` di blok `dependencies`, lalu klik **Sync Now**:
+
+```kotlin title="app/build.gradle.kts"
+implementation(libs.coil.compose)
+```
+
+### 6.2 Pasang `SubcomposeAsyncImage` di `NetworkImage.kt`
+Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/components/NetworkImage.kt`.  
+Tambahkan import berikut di bagian atas file:
+
+```kotlin title="ui/components/NetworkImage.kt"
+import androidx.compose.ui.platform.LocalContext
+import coil.compose.SubcomposeAsyncImage
+import coil.request.ImageRequest
+```
+
+Lalu ganti placeholder `Box(...)` di dalam fungsi `NetworkImage` dengan `SubcomposeAsyncImage`:
+
+```kotlin title="ui/components/NetworkImage.kt"
+val context = LocalContext.current
+
+SubcomposeAsyncImage(
+    model = ImageRequest.Builder(context)
+        .data(url)
+        .crossfade(300)
+        .build(),
+    contentDescription = contentDescription,
+    contentScale = contentScale,
+    loading = {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+        )
+    },
+    error = {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+        )
+    },
+    modifier = modifier,
+)
+```
+
+---
+
+## Langkah 7: Pengujian Aplikasi di Smartphone Fisik & Commit Git
 
 1. Pasang kabel data ke smartphone Android dan aktifkan **USB Debugging**.
 2. Klik tombol **Run 'app'** (ikon segitiga hijau) di Android Studio.
