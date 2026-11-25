@@ -522,6 +522,13 @@ Target kodingan kita hari ini:
 ## Langkah 1: Buat Komponen Chip Label `WallpaperTag` di `WallpaperCard.kt`
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/components/WallpaperCard.kt`.  
+Pastikan import berikut sudah ada di bagian atas file:
+
+```kotlin title="ui/components/WallpaperCard.kt"
+import androidx.compose.ui.unit.sp
+import com.gdgoc.luminawalls.theme.GoogleSansRounded
+```
+
 Cari penanda `TODO: [Session 4]` di fungsi `WallpaperTag`, lalu lengkapi kode Surface dan Text berikut:
 
 ```kotlin title="ui/components/WallpaperCard.kt"
@@ -582,53 +589,31 @@ leadingAction = {
 
 ### 2.2 Pasang di `PreviewScreen.kt`
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/screens/preview/PreviewScreen.kt`.  
-Cari baris Top Bar di dalam fungsi `PreviewScreen`:
+Pastikan import berikut sudah ada di bagian atas file:
 
 ```kotlin title="ui/screens/preview/PreviewScreen.kt"
-// --- 1. Top Bar ---
-Row(
-    modifier = Modifier
-        .fillMaxWidth()
-        .padding(horizontal = 16.dp, vertical = 6.dp),
-    verticalAlignment = Alignment.CenterVertically,
+import androidx.compose.ui.res.stringResource
+import com.gdgoc.luminawalls.R
+```
+
+Cari komentar `TODO: [Session 4]` di dalam Top Bar, lalu isi tombol kembalinya saja (jangan menyalin ulang `Spacer` dan `Column` yang sudah ada di bawahnya):
+
+```kotlin title="ui/screens/preview/PreviewScreen.kt"
+// TODO: [Session 4] Tulis FilledIconButton kembali (onBackClick) di bawah sini:
+FilledIconButton(
+    onClick = onBackClick,
+    shape = CircleShape,
+    colors = IconButtonDefaults.filledIconButtonColors(
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+    ),
+    modifier = Modifier.size(42.dp),
 ) {
-    // TODO: [Session 4] Tulis FilledIconButton kembali (onBackClick) di bawah sini:
-    FilledIconButton(
-        onClick = onBackClick,
-        shape = CircleShape,
-        colors = IconButtonDefaults.filledIconButtonColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            contentColor = MaterialTheme.colorScheme.onSurface,
-        ),
-        modifier = Modifier.size(42.dp),
-    ) {
-        Icon(
-            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-            contentDescription = stringResource(R.string.action_back),
-            modifier = Modifier.size(20.dp),
-        )
-    }
-
-    Spacer(modifier = Modifier.width(14.dp))
-
-    Column(modifier = Modifier.weight(1f)) {
-        Text(
-            text = wallpaper.title,
-            style = MaterialTheme.typography.titleLarge,
-            fontFamily = GoogleSansRounded,
-            fontWeight = FontWeight.Bold,
-            fontSize = 20.sp,
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Text(
-            text = stringResource(R.string.preview_crafted_by, wallpaper.author),
-            style = MaterialTheme.typography.labelSmall,
-            fontFamily = GoogleSansRounded,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
+    Icon(
+        imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+        contentDescription = stringResource(R.string.action_back),
+        modifier = Modifier.size(20.dp),
+    )
 }
 ```
 
@@ -637,21 +622,11 @@ Row(
 ## Langkah 3: Sambungkan Navigasi Layar ke `PreviewScreen`
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/LuminaMainApp.kt`.  
-Cari blok `LuminaTab.HOME`, lalu pasang navigasi ke `PreviewScreen` saat kartu wallpaper diklik:
+Cari komentar `TODO: [Session 4]` di dalam `HomeScreen(..., onWallpaperClick = { wall -> ... })`, lalu lengkapi navigasinya:
 
 ```kotlin title="ui/LuminaMainApp.kt"
-LuminaTab.HOME -> {
-    HomeScreen(
-        wallpapers = wallpapers,
-        onWallpaperClick = { wall ->
-            // TODO: [Session 4] Navigasikan ke PreviewScreen (AppScreen.Preview(wall)) di bawah sini:
-            activeScreen = AppScreen.Preview(wall)
-        },
-        onSettingsClick = {
-            activeScreen = AppScreen.Settings
-        },
-    )
-}
+// TODO: [Session 4] Navigasikan ke PreviewScreen (AppScreen.Preview(wall)) di bawah sini:
+activeScreen = AppScreen.Preview(wall)
 ```
 
 ---
@@ -659,43 +634,82 @@ LuminaTab.HOME -> {
 ## Langkah 4: Susun Layar `ContributorsScreen.kt`
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/ui/screens/contributors/ContributorsScreen.kt`.  
-Lengkapi fungsi pemanggil `refreshIfNeeded()`, kartu Hero, daftar tim GDG, dan daftar kontributor dari GitHub:
+Ada dua bagian `TODO: [Session 4]` yang perlu dilengkapi:
+
+### 4.1 Susun Blok Hero, Tim & Kontributor di `LazyColumn`
+Cari komentar `TODO: [Session 4]` di dalam `LazyColumn`:
 
 ```kotlin title="ui/screens/contributors/ContributorsScreen.kt"
-// 1. Pemicu muat data otomatis saat layar dibuka
-LaunchedEffect(Unit) {
-    // TODO: [Session 4] Panggil ContributorRepository.refreshIfNeeded() di bawah sini:
-    ContributorRepository.refreshIfNeeded()
+// TODO: [Session 4] Buat LuminaHeroCard, GdgocTeamBlock, dan ContributorsBlock di bawah sini:
+item(key = "hero_card") {
+    LuminaHeroCard()
 }
 
-// 2. Daftar Kontributor dari GitHub API
-items(
-    items = contributors,
-    key = { it.name + it.github },
-) { contributor ->
-    ContributorCard(
-        contributor = contributor,
-        onClick = {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(contributor.github))
-            context.startActivity(intent)
-        },
-        leadingIcon = {
-            val avatarUrl = contributor.avatarUrl
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                modifier = Modifier.size(44.dp),
-            ) {
-                NetworkImage(
-                    url = avatarUrl,
-                    contentDescription = contributor.name,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(CircleShape),
-                )
-            }
-        },
+item(key = "team_header") {
+    SectionHeader(
+        title = androidx.compose.ui.res.stringResource(com.gdgoc.luminawalls.R.string.about_team_title),
+        subtitle = androidx.compose.ui.res.stringResource(com.gdgoc.luminawalls.R.string.about_team_subtitle),
     )
+}
+
+item(key = "team_cards") {
+    GdgocTeamBlock(
+        onInstructorClick = { openUrl("https://github.com/pavelc4") },
+        onCoreTeamClick = { openUrl("https://www.instagram.com/gdgocwidyatama?xtok=MWh5Z2N6NnJzdHJhZg==") },
+    )
+}
+
+item(key = "contributors_header") {
+    SectionHeader(
+        title = androidx.compose.ui.res.stringResource(com.gdgoc.luminawalls.R.string.about_contributors_title),
+        subtitle = androidx.compose.ui.res.stringResource(com.gdgoc.luminawalls.R.string.about_contributors_subtitle),
+    )
+}
+
+item(key = "contributors_list") {
+    ContributorsBlock(
+        contributors = contributors,
+        onOpenGithub = { openUrl(it) },
+    )
+}
+```
+
+### 4.2 Tampilkan Daftar Kontributor di `ContributorsBlock`
+Gulir ke bagian bawah file pada fungsi `ContributorsBlock`, lalu lengkapi `TODO: [Session 4]`:
+
+```kotlin title="ui/screens/contributors/ContributorsScreen.kt"
+// TODO: [Session 4] Tampilkan daftar kontributor menggunakan Column, LuminaListItem, dan avatar foto di bawah sini:
+Column(
+    modifier = modifier.fillMaxWidth(),
+    verticalArrangement = Arrangement.spacedBy(3.dp),
+) {
+    val contributorBadge =
+        androidx.compose.ui.res.stringResource(com.gdgoc.luminawalls.R.string.about_badge_contributor)
+
+    contributors.forEachIndexed { index, contributor ->
+        val avatarUrl = contributor.avatarUrl ?: "https://github.com/${contributor.name}.png"
+        LuminaListItem(
+            title = contributor.name,
+            shape = itemShapeFor(index, contributors.size),
+            trailingBadgeText = contributorBadge,
+            onClick = { onOpenGithub(contributor.github) },
+            leadingContent = {
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    modifier = Modifier.size(44.dp),
+                ) {
+                    NetworkImage(
+                        url = avatarUrl,
+                        contentDescription = contributor.name,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape),
+                    )
+                }
+            },
+        )
+    }
 }
 ```
 
@@ -705,143 +719,90 @@ items(
 
 Buka berkas `app/src/main/kotlin/com/gdgoc/luminawalls/data/repository/ContributorRepository.kt`.
 
-Perhatikan bagaimana kita menyertakan `User-Agent`, memeriksa status `HTTP_OK` (`200`), mem-parsing field `"login"`, `"avatar_url"`, dan `"html_url"` dari `JSONArray`, membungkusnya dalam `withContext(Dispatchers.IO)`, serta mengembalikan `initialContributors` sebagai data cadangan aman:
+### 5.1 Tambahkan Import
+Tambahkan 3 import berikut di bagian atas file:
 
 ```kotlin title="data/repository/ContributorRepository.kt"
-package com.gdgoc.luminawalls.data.repository
-
-import com.gdgoc.luminawalls.data.model.Contributor
 import java.net.HttpURLConnection
 import java.net.URL
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.json.JSONArray
+```
 
-object ContributorRepository {
+### 5.2 Atur URL Repositori Target
+Cari komentar `TODO: [Session 4]` pertama dan arahkan ke repositori target (misalnya `pavelc4/auriya` atau repositori milikmu sendiri):
 
-    // URL repositori GitHub live (kamu bisa mencoba repositori sendiri atau "https://github.com/pavelc4/auriya")
-    const val DEFAULT_REPO_URL = "https://github.com/pavelc4/auriya"
+```kotlin title="data/repository/ContributorRepository.kt"
+// TODO: [Session 4] Masukkan URL repositori GitHub LuminaWalls kamu di bawah sini:
+const val DEFAULT_REPO_URL = "https://github.com/pavelc4/auriya"
+```
 
-    private val initialContributors = listOf(
-        Contributor(
-            name = "dimas-dwi",
-            role = "Lead Instructor",
-            github = "https://github.com/pavelc4",
-            bio = "Lead Instructor GDGoC Mobile",
-            avatarLetter = "D",
-            avatarUrl = "https://avatars.githubusercontent.com/u/94319420?v=4",
-        ),
-        Contributor(
-            name = "gdgoc-widyatama",
-            role = "Core Team",
-            github = "https://github.com/gdgocwidyatama",
-            bio = "GDGoC Universitas Widyatama",
-            avatarLetter = "G",
-            avatarUrl = null,
-        ),
-    )
+### 5.3 Eksekusi Request & Parsing JSON di `fetchFromGitHub`
+Cari komentar `TODO: [Session 4]` di dalam fungsi `fetchFromGitHub(...)`, lalu lengkapi dengan kode berikut (hapus `emptyList()` placeholder di bawahnya) dan tambahkan fungsi helper `resolveApiUrl`:
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+```kotlin title="data/repository/ContributorRepository.kt"
+// TODO: [Session 4] Eksekusi REST API GitHub untuk mengambil daftar kontributor di bawah sini:
+val apiUrl = resolveApiUrl(targetUrlOrRepo)
+val connection = (URL(apiUrl).openConnection() as HttpURLConnection).apply {
+    requestMethod = "GET"
+    connectTimeout = 10_000
+    readTimeout = 10_000
+    setRequestProperty("User-Agent", "LuminaWalls-Android")
+    setRequestProperty("Accept", "application/vnd.github.v3+json")
+}
 
-    private val _contributors = MutableStateFlow<List<Contributor>>(initialContributors)
-    val contributors: StateFlow<List<Contributor>> = _contributors.asStateFlow()
-
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
-
-    private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error.asStateFlow()
-
-    @Volatile
-    private var hasFetched = false
-
-    fun refreshIfNeeded(targetUrlOrRepo: String = DEFAULT_REPO_URL) {
-        if (hasFetched || _isLoading.value) return
-        scope.launch {
-            _isLoading.value = true
-            _error.value = null
-            try {
-                val fetched = fetchFromGitHub(targetUrlOrRepo)
-                if (fetched.isNotEmpty()) {
-                    _contributors.value = fetched
-                    hasFetched = true
-                }
-            } catch (e: Exception) {
-                _error.value = e.message
-            } finally {
-                _isLoading.value = false
-            }
-        }
+try {
+    val code = connection.responseCode
+    if (code != HttpURLConnection.HTTP_OK) {
+        return@withContext emptyList()
     }
 
-    suspend fun fetchFromGitHub(targetUrlOrRepo: String = DEFAULT_REPO_URL): List<Contributor> =
-        withContext(Dispatchers.IO) {
-            val apiUrl = resolveApiUrl(targetUrlOrRepo)
-            val connection = (URL(apiUrl).openConnection() as HttpURLConnection).apply {
-                requestMethod = "GET"
-                connectTimeout = 10_000
-                readTimeout = 10_000
-                setRequestProperty("User-Agent", "LuminaWalls-Android")
-                setRequestProperty("Accept", "application/vnd.github.v3+json")
-            }
+    val jsonText = connection.inputStream.bufferedReader().use { it.readText() }
+    val jsonArray = JSONArray(jsonText)
+    val result = mutableListOf<Contributor>()
 
-            try {
-                val code = connection.responseCode
-                if (code != HttpURLConnection.HTTP_OK) {
-                    return@withContext emptyList()
-                }
+    for (i in 0 until jsonArray.length()) {
+        val obj = jsonArray.getJSONObject(i)
+        val login = obj.optString("login", "")
+        if (login.isBlank() || login.contains("[bot]")) continue
 
-                val jsonText = connection.inputStream.bufferedReader().use { it.readText() }
-                val jsonArray = JSONArray(jsonText)
-                val result = mutableListOf<Contributor>()
+        val avatarUrl = obj.optString("avatar_url", "")
+        val htmlUrl = obj.optString("html_url", "")
 
-                for (i in 0 until jsonArray.length()) {
-                    val obj = jsonArray.getJSONObject(i)
-                    val login = obj.optString("login", "")
-                    if (login.isBlank() || login.contains("[bot]")) continue
+        result.add(
+            Contributor(
+                name = login,
+                role = "Contributor",
+                github = htmlUrl,
+                bio = "Active contributor to open-source repository",
+                avatarLetter = login.take(1).uppercase(),
+                avatarUrl = avatarUrl.ifBlank { null },
+            )
+        )
+    }
 
-                    val avatarUrl = obj.optString("avatar_url", "")
-                    val htmlUrl = obj.optString("html_url", "")
+    result
+} finally {
+    connection.disconnect()
+}
+```
 
-                    result.add(
-                        Contributor(
-                            name = login,
-                            role = "Contributor",
-                            github = htmlUrl,
-                            bio = "Active contributor to open-source repository",
-                            avatarLetter = login.take(1).uppercase(),
-                            avatarUrl = avatarUrl.ifBlank { null },
-                        )
-                    )
-                }
+Tambahkan helper `resolveApiUrl` di dalam `object ContributorRepository` (di bawah `fetchFromGitHub`):
 
-                result
-            } finally {
-                connection.disconnect()
-            }
+```kotlin title="data/repository/ContributorRepository.kt"
+private fun resolveApiUrl(target: String): String {
+    val trimmed = target.trim().trimEnd('/')
+    return when {
+        trimmed.startsWith("https://api.github.com/repos/") -> {
+            if (trimmed.contains("/contributors")) trimmed else "$trimmed/contributors?per_page=100"
         }
-
-    private fun resolveApiUrl(target: String): String {
-        val trimmed = target.trim().trimEnd('/')
-        return when {
-            trimmed.startsWith("https://api.github.com/repos/") -> {
-                if (trimmed.contains("/contributors")) trimmed else "$trimmed/contributors?per_page=100"
-            }
-            trimmed.startsWith("https://github.com/") -> {
-                val path = trimmed.removePrefix("https://github.com/")
-                "https://api.github.com/repos/$path/contributors?per_page=100"
-            }
-            trimmed.contains("/") -> {
-                "https://api.github.com/repos/$trimmed/contributors?per_page=100"
-            }
-            else -> "https://api.github.com/repos/pavelc4/auriya/contributors?per_page=100"
+        trimmed.startsWith("https://github.com/") -> {
+            val path = trimmed.removePrefix("https://github.com/")
+            "https://api.github.com/repos/$path/contributors?per_page=100"
         }
+        trimmed.contains("/") -> {
+            "https://api.github.com/repos/$trimmed/contributors?per_page=100"
+        }
+        else -> "https://api.github.com/repos/pavelc4/auriya/contributors?per_page=100"
     }
 }
 ```
